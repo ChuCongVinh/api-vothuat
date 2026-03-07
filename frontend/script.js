@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://nangkhieutriduc.com/api';
 
 // 1. Hàm chạy ngay khi web tải xong
 document.addEventListener('DOMContentLoaded', () => {
@@ -60,7 +60,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     const subject = document.getElementById('userSubject').value; // <--- Lấy thêm cái này
 
     try {
-        const res = await fetch('http://localhost:3000/api/register', {
+        const res = await fetch('https://nangkhieutriduc.com/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, phone, locationId, subject }) // <--- Gửi thêm subject

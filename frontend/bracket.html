@@ -157,7 +157,7 @@
 
         async function loadBracket() {
             try {
-                const res = await fetch('http://localhost:3000/api/tournament/bracket');
+                const res = await fetch('https://nangkhieutriduc.com/api/tournament/bracket');
                 const data = await res.json();
                 renderFullBracket(data);
             } catch (e) {

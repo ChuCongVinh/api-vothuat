@@ -387,5 +387,5 @@ app.get('/api/users/:id/attendance', (req, res) => {
 // KHỞI CHẠY
 // ============================================================
 app.listen(PORT, () => {
-    console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
+    console.log(`🚀 Server đang chạy tại https://nangkhieutriduc.com:${PORT}`);
 });

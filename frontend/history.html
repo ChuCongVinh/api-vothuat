@@ -98,7 +98,7 @@
         // 1. Tải bảng huy chương
         async function loadMedals() {
             try {
-                const res = await fetch('http://localhost:3000/api/tournament/medals');
+                const res = await fetch('https://nangkhieutriduc.com/api/tournament/medals');
                 const data = await res.json();
                 const tbody = document.getElementById('medalTableBody');
                 tbody.innerHTML = '';
@@ -136,7 +136,7 @@
         // 2. Tải lịch sử đấu
         async function loadHistory() {
             try {
-                const res = await fetch('http://localhost:3000/api/tournament/history');
+                const res = await fetch('https://nangkhietriduc.com/api/tournament/history');
                 const data = await res.json();
                 const container = document.getElementById('historyList');
                 container.innerHTML = '';

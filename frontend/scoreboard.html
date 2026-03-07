@@ -176,7 +176,7 @@
         async function init() {
             if(!matchId) { alert("Thiếu ID trận đấu!"); return; }
             try {
-                const res = await fetch(`http://localhost:3000/api/tournament/match/${matchId}`);
+                const res = await fetch(`https://nangkhieutriduc.com/api/tournament/match/${matchId}`);
                 if(!res.ok) throw new Error("Lỗi tải");
                 const match = await res.json();
                 document.getElementById('nameAka').value = match.p1;
@@ -186,13 +186,13 @@
                 document.getElementById('matchIDDisplay').innerText = `TRẬN #${match.id}`;
 
                 // --- GỌI API SET ACTIVE ĐỂ HIỂN THỊ LÊN MÀN HÌNH LED ---
-                fetch('http://localhost:3000/api/tournament/match/start', {
+                fetch('https://nangkhieutriduc.com/api/tournament/match/start', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ matchId: matchId })
                 });
 
-                const bRes = await fetch('http://localhost:3000/api/tournament/bracket');
+                const bRes = await fetch('https://nangkhieutriduc.com/api/tournament/bracket');
                 const bracket = await bRes.json();
                 let matchesInRound1 = bracket.rounds && bracket.rounds.length > 0 ? bracket.rounds[0].length : 0;
                 const totalTheoreticalRounds = Math.ceil(Math.log2(matchesInRound1 * 2));
@@ -320,7 +320,7 @@
 
             // GỌI API - ĐÃ SỬA ĐỂ GỬI ĐIỂM SỐ
             try {
-                const res = await fetch('http://localhost:3000/api/tournament/winner', {
+                const res = await fetch('https://nangkhieutriduc.com/api/tournament/winner', {
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
