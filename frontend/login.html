@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #222; font-family: sans-serif; }
+        .login-box { background: white; padding: 40px; border-radius: 10px; width: 350px; text-align: center; }
+        .login-box h2 { color: #d32f2f; margin-bottom: 20px; }
+        .login-box input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; box-sizing: border-box; }
+        .login-box button { width: 100%; padding: 10px; background: #d32f2f; color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .login-box button:hover { opacity: 0.9; }
+        .back-link { display: block; margin-top: 15px; text-decoration: none; color: #555; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2 id="loginTitle">ĐĂNG NHẬP</h2>
+        
+        <input type="text" id="username" placeholder="Tên đăng nhập">
+        <input type="password" id="password" placeholder="Mật khẩu">
+        
+        <button onclick="handleLogin()">ĐĂNG NHẬP</button>
+        
+        <p id="msg" style="color: red; margin-top: 10px; font-weight: bold;"></p>
+        
+        <div id="registerSection" style="margin-top: 15px; display: none;">
+            Chưa có tài khoản? <a href="register.html" style="color: #0d6efd; font-weight: bold; text-decoration: none;">Đăng ký ngay</a>
+        </div>
+
+        <a href="index.html" class="back-link">← Quay lại trang chủ</a>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role'); 
+        
+        const titleElement = document.getElementById('loginTitle');
+        const loginBtn = document.querySelector('button');
+        const registerSection = document.getElementById('registerSection'); // Lấy thẻ div đăng ký
+
+        if (role === 'admin') {
+            titleElement.innerText = "ADMIN LOGIN";
+        } else {
+            titleElement.innerText = "KHÁCH HÀNG / HỌC VIÊN";
+            titleElement.style.color = "#0d6efd"; 
+            loginBtn.style.backgroundColor = "#0d6efd";
+            
+            // QUAN TRỌNG: Nếu là khách thì hiện nút Đăng ký
+            registerSection.style.display = "block";
+        }
+
+        async function handleLogin() {
+            // ... (Giữ nguyên code xử lý đăng nhập của bạn ở bài trước) ...
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const msg = document.getElementById('msg');
+            msg.innerText = "Đang xử lý...";
+
+            try {
+                const res = await fetch('http://localhost:3000/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('currentUser', username);
+                    localStorage.setItem('role', role);
+                    alert("Đăng nhập thành công!");
+                    if (role === 'admin') window.location.href = 'admin.html';
+                    else window.location.href = 'index.html';
+                } else {
+                    msg.innerText = data.message || "Sai tài khoản hoặc mật khẩu!";
+                }
+            } catch (error) {
+                // Demo fallback
+                msg.innerText = "Không kết nối được Server! (Demo Mode)";
+                setTimeout(() => {
+                   if(username) {
+                        localStorage.setItem('role', role);
+                        if (role === 'admin') window.location.href = 'admin.html';
+                        else window.location.href = 'index.html';
+                   }
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Tổng Sắp Huy Chương & Lịch Sử</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #f4f6f9; padding: 20px; margin: 0; }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #333; text-transform: uppercase; margin: 0; }
+        
+        .nav-bar { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
+        .btn-nav { text-decoration: none; padding: 10px 20px; background: #333; color: white; border-radius: 5px; font-weight: bold; transition: 0.2s; }
+        .btn-nav:hover { background: #555; }
+        .btn-active { background: #d4af37; color: black; }
+
+        /* --- BẢNG TỔNG SẮP --- */
+        .medal-section { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .section-title { font-size: 1.5rem; font-weight: 900; color: #333; border-left: 5px solid #d4af37; padding-left: 15px; margin-bottom: 20px; text-transform: uppercase; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px 15px; text-align: center; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; font-weight: bold; text-transform: uppercase; font-size: 0.9rem; color: #555; }
+        tr:hover { background-color: #f1f1f1; }
+
+        .rank-1 { color: #d4af37; font-weight: 900; font-size: 1.2rem; } /* Vàng */
+        .rank-2 { color: #a0a0a0; font-weight: 900; font-size: 1.1rem; } /* Bạc */
+        .rank-3 { color: #cd7f32; font-weight: 900; font-size: 1.1rem; } /* Đồng */
+
+        .medal-icon { margin-right: 5px; }
+        .gold { color: #d4af37; }
+        .silver { color: #a0a0a0; }
+        .bronze { color: #cd7f32; }
+
+        /* --- LỊCH SỬ ĐẤU --- */
+        .history-card { 
+            background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px; 
+            border-left: 5px solid #ddd; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .history-card.final { border-left-color: #d4af37; background: #fff8e1; } /* Chung kết màu vàng */
+
+        .match-detail { display: flex; align-items: center; gap: 20px; flex: 1; }
+        .fighter { font-weight: bold; font-size: 1.1rem; }
+        .team-label { font-size: 0.8rem; color: #777; font-weight: normal; font-style: italic; }
+        .vs { font-weight: 900; color: #ccc; font-style: italic; }
+        
+        .result-badge { 
+            background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; 
+            font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Tổng Kết Giải Đấu</h1>
+        </div>
+
+        <div class="nav-bar">
+    <a href="tournament_hub.html" class="btn-nav"><i class="fa-solid fa-arrow-left"></i> Khu Vực Giải Đấu</a>
+    <a href="bracket.html" class="btn-nav"><i class="fa-solid fa-sitemap"></i> Sơ đồ</a>
+    <a href="#" class="btn-nav btn-active">Kết quả & Huy chương</a>
+</div>
+
+        <div class="medal-section">
+            <div class="section-title">Bảng Tổng Sắp Huy Chương</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th width="10%">Hạng</th>
+                        <th width="40%" style="text-align:left; padding-left:30px;">Đoàn / Đơn Vị</th>
+                        <th width="15%"><i class="fa-solid fa-medal gold"></i> Vàng</th>
+                        <th width="15%"><i class="fa-solid fa-medal silver"></i> Bạc</th>
+                        <th width="15%"><i class="fa-solid fa-medal bronze"></i> Đồng</th>
+                        <th width="15%">Tổng</th>
+                    </tr>
+                </thead>
+                <tbody id="medalTableBody">
+                    <tr><td colspan="6">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="medal-section">
+            <div class="section-title">Nhật Ký Trận Đấu</div>
+            <div id="historyList">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Tải bảng huy chương
+        async function loadMedals() {
+            try {
+                const res = await fetch('http://localhost:3000/api/tournament/medals');
+                const data = await res.json();
+                const tbody = document.getElementById('medalTableBody');
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="padding:30px; color:#999;">Chưa có huy chương nào được trao.</td></tr>';
+                    return;
+                }
+
+                data.forEach((team, index) => {
+                    let rankClass = '';
+                    if (index === 0) rankClass = 'rank-1';
+                    else if (index === 1) rankClass = 'rank-2';
+                    else if (index === 2) rankClass = 'rank-3';
+
+                    const total = team.gold + team.silver + team.bronze;
+
+                    const row = `
+                        <tr>
+                            <td class="${rankClass}">#${index + 1}</td>
+                            <td style="text-align:left; padding-left:30px; font-weight:bold;">${team.name}</td>
+                            <td class="gold" style="font-weight:bold;">${team.gold}</td>
+                            <td class="silver" style="font-weight:bold;">${team.silver}</td>
+                            <td class="bronze" style="font-weight:bold;">${team.bronze}</td>
+                            <td style="font-weight:900;">${total}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // 2. Tải lịch sử đấu
+        async function loadHistory() {
+            try {
+                const res = await fetch('http://localhost:3000/api/tournament/history');
+                const data = await res.json();
+                const container = document.getElementById('historyList');
+                container.innerHTML = '';
+
+                if (data.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; color:#999;">Chưa có trận đấu nào diễn ra.</div>';
+                    return;
+                }
+
+                data.forEach(match => {
+                    // Xác định bên thắng/thua để tô màu
+                    const p1Class = match.p1 === match.winner ? 'color:green' : 'color:#555';
+                    const p2Class = match.p2 === match.winner ? 'color:green' : 'color:#555';
+                    
+                    // Icon cúp cho người thắng
+                    const p1Icon = match.p1 === match.winner ? '<i class="fa-solid fa-trophy gold"></i>' : '';
+                    const p2Icon = match.p2 === match.winner ? '<i class="fa-solid fa-trophy gold"></i>' : '';
+
+                    const isFinal = match.id.toString().includes('CK') || data.length === 1; // Logic giả định
+
+                    const html = `
+                        <div class="history-card ${isFinal ? 'final' : ''}">
+                            <div class="match-detail">
+                                <div style="width: 40%; text-align: right;">
+                                    <span class="fighter" style="${p1Class}">${match.p1} ${p1Icon}</span>
+                                    <br><span class="team-label">${match.team1 || ''}</span>
+                                </div>
+                                <div class="vs">VS</div>
+                                <div style="width: 40%; text-align: left;">
+                                    <span class="fighter" style="${p2Class}">${p2Icon} ${match.p2}</span>
+                                    <br><span class="team-label">${match.team2 || ''}</span>
+                                </div>
+                            </div>
+                            <div class="result-badge">
+                                <span>Thắng: ${match.winner}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Tự động tải dữ liệu
+        loadMedals();
+        loadHistory();
+        
+        // Cập nhật mỗi 10 giây
+        setInterval(() => {
+            loadMedals();
+            loadHistory();
+        }, 10000);
+    </script>
+</body>
+</html>

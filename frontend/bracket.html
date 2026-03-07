@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ Đồ Thi Đấu Karate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background-color: #fff; padding: 20px; margin: 0; overflow-x: auto; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { text-transform: uppercase; color: #333; margin: 0; font-size: 2rem; }
+
+        /* --- KHUNG CHÍNH --- */
+        #bracketContainer { display: flex; padding-left: 20px; padding-bottom: 50px; align-items: center; }
+
+        /* --- CỘT VÒNG ĐẤU --- */
+        .round-column { display: flex; flex-direction: column; justify-content: space-around; width: 340px; margin-right: 60px; position: relative; }
+        .round-title { text-align: center; font-weight: bold; color: #555; text-transform: uppercase; margin-bottom: 20px; position: absolute; top: -40px; width: 100%; }
+
+        /* --- CẶP ĐẤU --- */
+        .match-pair { display: flex; flex-direction: column; justify-content: center; margin: 20px 0; position: relative; flex-grow: 1; }
+        .match-pair::after { content: ''; position: absolute; right: -30px; top: 25%; bottom: 25%; width: 2px; background: #000; }
+        .round-column:last-of-type .match-pair::after { display: none; }
+        .match-pair::before { content: ''; position: absolute; right: -60px; top: 50%; width: 30px; height: 2px; background: #000; }
+        .round-column:last-of-type .match-pair::before { display: none; }
+
+        /* --- THẺ TRẬN ĐẤU --- */
+        .match-card { border: 1px solid #333; background: white; position: relative; z-index: 2; height: 80px; display: flex; flex-direction: column; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); margin: 10px 0; justify-content: center; }
+        .match-card::after { content: ''; position: absolute; right: -30px; top: 50%; width: 30px; height: 2px; background: #000; }
+        .round-column:last-of-type .match-card::after { display: none; }
+
+        .match-info { position: absolute; top: -20px; right: 0; font-size: 11px; font-weight: bold; color: #555; display: flex; gap: 5px; align-items: center; }
+        
+        /* --- SỬA CSS PLAYER ROW --- */
+        .player-row { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; /* Đẩy tên và điểm ra 2 bên */
+            padding: 0 10px; 
+            font-size: 13px; 
+            font-weight: 700; 
+            color: #000; 
+            position: relative; 
+            overflow: hidden; 
+            white-space: nowrap; 
+        }
+        
+        .player-left {
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .team-name { font-weight: normal; font-size: 11px; color: #555; margin-left: 5px; font-style: italic; }
+
+        /* --- CSS ĐIỂM SỐ --- */
+        .player-score {
+            font-weight: 800;
+            color: #d9534f;
+            background: #fff;
+            padding: 0 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+            min-width: 20px;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .aka { border-bottom: 1px solid #ccc; background: linear-gradient(90deg, #fff 40%, #ffcdd2 100%); }
+        .aka::after { content: ''; position: absolute; top:0; right:0; bottom:0; width: 5px; background: #dc3545; }
+        .ao { background: linear-gradient(90deg, #fff 40%, #bbdefb 100%); }
+        .ao::after { content: ''; position: absolute; top:0; right:0; bottom:0; width: 5px; background: #0d6efd; }
+        
+        .empty-slot { color: #999; font-weight: normal; font-style: italic; }
+        .win { background: #d1e7dd !important; color: #0f5132; }
+
+        .champion-column { display: flex; align-items: center; margin-left: -2px; justify-content: flex-start; }
+        .champion-line { width: 100px; height: 2px; background: #000; margin-right: 10px; }
+        .champion-name { font-size: 1.5rem; font-weight: 900; color: #d4af37; text-transform: uppercase; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+
+        /* Nút bấm */
+        .btn-go { text-decoration: none; font-size: 10px; padding: 4px 8px; background: #333; color: white; border-radius: 3px; cursor: pointer; display: inline-block; }
+        .btn-go:hover { background: #000; }
+        .btn-active { background: #dc3545; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.7; } }
+
+        .single-match-pair::after { display: none !important; }
+        .single-match-pair::before { top: 50% !important; }
+        .nav-btn { position: fixed; bottom: 20px; left: 20px; padding: 10px 20px; background: #333; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+
+        /* --- BẢNG HƯỚNG DẪN --- */
+        .instruction-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            border-left: 5px solid #28a745;
+            z-index: 100;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .instruction-panel h3 { margin: 0 0 10px 0; color: #333; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+        .step-row { margin-bottom: 10px; display: flex; gap: 10px; align-items: flex-start; }
+        .step-num { background: #333; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 0.75rem; flex-shrink: 0; margin-top: 2px; }
+        
+        .action-link {
+            color: #0d6efd;
+            font-weight: bold;
+            text-decoration: underline;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .action-link:hover { color: #0044cc; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>SƠ ĐỒ THI ĐẤU TOÀN GIẢI</h1>
+    </div>
+
+    <div class="instruction-panel">
+        <h3><i class="fa-solid fa-circle-info"></i> HƯỚNG DẪN</h3>
+        <div class="step-row">
+            <div class="step-num">1</div>
+            <div>
+                <span class="action-link" onclick="openViewerWindow()">Nhấn vào đây</span> 
+                để mở <strong>Màn hình chiếu (Viewer)</strong> trên tab mới. Kéo tab đó sang màn hình TV/LED.
+            </div>
+        </div>
+        <div class="step-row">
+            <div class="step-num">2</div>
+            <div>
+                Nhấn nút <strong style="background:#333; color:white; padding:2px 5px; border-radius:3px; font-size:0.7rem;">VÀO</strong> 
+                tại cặp đấu để bắt đầu. Khi xong sẽ hiện <strong style="background:#6c757d; color:white; padding:2px 5px; border-radius:3px; font-size:0.7rem;">ĐÃ THI ĐẤU</strong> và điểm số.
+            </div>
+        </div>
+    </div>
+
+    <div id="bracketContainer" style="min-height: 300px; display:flex; justify-content:center; align-items:center;">
+        Loading...
+    </div>
+
+    <a href="tournament_hub.html" class="nav-btn"><i class="fa-solid fa-arrow-left"></i> Khu Vực Giải Đấu</a>
+
+    <script>
+        function openViewerWindow() {
+            window.open('viewer.html', '_blank');
+        }
+
+        async function loadBracket() {
+            try {
+                const res = await fetch('http://localhost:3000/api/tournament/bracket');
+                const data = await res.json();
+                renderFullBracket(data);
+            } catch (e) {
+                console.error(e);
+                document.getElementById('bracketContainer').innerHTML = "Lỗi kết nối Server! Hãy đảm bảo 'node server.js' đang chạy.";
+            }
+        }
+
+        function renderFullBracket(data) {
+            const container = document.getElementById('bracketContainer');
+            container.innerHTML = '';
+
+            const roundsData = data.rounds || [];
+            const champion = data.champion;
+
+            if (roundsData.length === 0) {
+                container.innerHTML = '<h3 style="color:#999;">Chưa có dữ liệu. Hãy vào Setup tải file Excel!</h3>';
+                return;
+            }
+
+            let firstRoundMatches = roundsData[0];
+            let fullBracketStructure = [firstRoundMatches];
+            let currentCount = firstRoundMatches.length;
+            let roundIndex = 1;
+
+            while (currentCount > 1) {
+                let nextRoundCount = Math.ceil(currentCount / 2);
+                let nextRoundRealData = roundsData[roundIndex] || [];
+                let roundMatches = [];
+                for(let i=0; i<nextRoundCount; i++) {
+                    if (nextRoundRealData[i]) roundMatches.push(nextRoundRealData[i]);
+                    else roundMatches.push({ id: `R${roundIndex+1}_${i+1}`, p1: '---', p2: '---', isPlaceholder: true });
+                }
+                fullBracketStructure.push(roundMatches);
+                currentCount = nextRoundCount;
+                roundIndex++;
+            }
+
+            fullBracketStructure.forEach((roundMatches, rIdx) => {
+                const col = document.createElement('div');
+                col.className = 'round-column';
+                let title = (rIdx === fullBracketStructure.length - 1) ? "CHUNG KẾT" : `VÒNG ${rIdx + 1}`;
+                col.innerHTML = `<div class="round-title">${title}</div>`;
+
+                for (let i = 0; i < roundMatches.length; i += 2) {
+                    const match1 = roundMatches[i];
+                    const match2 = roundMatches[i+1];
+                    const pairDiv = document.createElement('div');
+                    pairDiv.className = 'match-pair';
+
+                    if (!match2 && roundMatches.length === 1) pairDiv.classList.add('single-match-pair');
+
+                    pairDiv.appendChild(createMatchHTML(match1));
+                    if (match2) pairDiv.appendChild(createMatchHTML(match2));
+                    else if (roundMatches.length > 1) pairDiv.classList.add('single-match-pair');
+                    
+                    col.appendChild(pairDiv);
+                }
+                container.appendChild(col);
+            });
+
+            const championCol = document.createElement('div');
+            championCol.className = 'champion-column';
+            let winnerDisplay = champion ? `<i class="fa-solid fa-trophy"></i> ${champion}` : "?";
+            championCol.innerHTML = `<div class="champion-line"></div><div class="champion-name">${winnerDisplay}</div>`;
+            container.appendChild(championCol);
+        }
+
+        function createMatchHTML(match) {
+            const div = document.createElement('div');
+            div.className = 'match-card';
+
+            if (match.isPlaceholder) {
+                div.style.opacity = "0.5";
+                div.innerHTML = `<div class="player-row aka"><span class="empty-slot">---</span></div><div class="player-row ao"><span class="empty-slot">---</span></div>`;
+                return div;
+            }
+
+            const team1 = match.team1 ? `<span class="team-name">(${match.team1})</span>` : '';
+            const team2 = match.team2 ? `<span class="team-name">(${match.team2})</span>` : '';
+            
+            let btn = "";
+            let s1 = "";
+            let s2 = "";
+            
+            // LOGIC MỚI: Hiển thị điểm số khi đã đấu xong
+            if (match.status === 'finished' || (match.winner && match.winner !== "null")) {
+                btn = `<span class="btn-go" style="background:#6c757d; cursor:not-allowed; opacity:0.8; font-size:9px;">ĐÃ THI ĐẤU</span>`;
+                
+                // Tạo HTML điểm số
+                let score1Val = (match.score1 !== undefined && match.score1 !== null) ? match.score1 : 0;
+                let score2Val = (match.score2 !== undefined && match.score2 !== null) ? match.score2 : 0;
+                
+                s1 = `<span class="player-score">${score1Val}</span>`;
+                s2 = `<span class="player-score">${score2Val}</span>`;
+
+            } else {
+                if(match.p1 && match.p2) {
+                    btn = `<a onclick="goToMatch(${match.id})" class="btn-go">VÀO</a>`;
+                }
+            }
+
+            div.innerHTML = `
+                <div class="match-info">Trận ${match.id} ${btn}</div>
+                <div class="player-row aka ${match.winner === match.p1 ? 'win' : ''}">
+                    <div class="player-left">
+                        <span>${match.p1 || '---'}</span> ${team1}
+                    </div>
+                    ${s1}
+                </div>
+                <div class="player-row ao ${match.winner === match.p2 ? 'win' : ''}">
+                    <div class="player-left">
+                        <span>${match.p2 || '---'}</span> ${team2}
+                    </div>
+                    ${s2}
+                </div>
+            `;
+            return div;
+        }
+
+        function goToMatch(id) {
+            if(!id) return alert("Lỗi: ID trận đấu không tồn tại!");
+            window.open(`scoreboard.html?matchId=${id}`, '_blank');
+        }
+
+        loadBracket();
+        setInterval(loadBracket, 5000);
+    </script>
+</body>
+</html>

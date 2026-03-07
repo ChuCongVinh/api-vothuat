@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>WKF TV Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --aka-color: #e60000; --ao-color: #0044cc;
+            --bg-dark: #0f1015; --gold: #ffd700;
+        }
+        body { 
+            margin: 0; padding: 0; background: var(--bg-dark); color: white; 
+            height: 100vh; overflow: hidden; 
+            display: flex; flex-direction: column; 
+            font-family: 'Roboto', sans-serif; 
+        }
+        
+        /* HEADER */
+        .header { 
+            height: 14vh; background: #000; display: flex; border-bottom: 3px solid #333; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 10;
+        }
+        .p-info { flex: 1; padding: 0 30px; display: flex; flex-direction: column; justify-content: center; text-transform: uppercase; }
+        
+        .p-info.aka { align-items: flex-start; background: linear-gradient(90deg, #330000 0%, #050505 100%); border-left: 15px solid var(--aka-color); }
+        .p-info.ao { align-items: flex-end; background: linear-gradient(-90deg, #001133 0%, #050505 100%); border-right: 15px solid var(--ao-color); }
+        
+        .team-row { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; }
+        .aka .team-row { flex-direction: row; }
+        .ao .team-row { flex-direction: row-reverse; }
+
+        .flag-img {
+            width: 60px; height: 40px; border-radius: 4px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5); object-fit: cover;
+            display: none; border: 1px solid #555;
+        }
+
+        .name { font-size: 2.5rem; font-weight: 900; line-height: 1; text-shadow: 2px 2px 5px black; white-space: nowrap; margin-top: 5px; }
+        .team { font-family: 'Orbitron'; font-size: 1.2rem; color: #aaa; letter-spacing: 1px; white-space: nowrap; font-weight: bold; }
+
+        /* MAIN STAGE */
+        .main-stage {
+            flex: 1; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
+            gap: 20px; padding-top: 10px;
+        }
+
+        .scores-row { display: flex; justify-content: center; align-items: center; gap: 80px; width: 100%; }
+        .side-col { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+
+        /* --- HỘP ĐIỂM (SCORE BOX) --- */
+        .score-box { 
+            width: 280px; height: 200px; 
+            display: flex; justify-content: center; align-items: center;
+            font-size: 10rem; font-family: 'Roboto'; font-weight: 900;
+            color: white; border-radius: 15px; 
+            position: relative; /* Quan trọng để định vị Senshu */
+            overflow: hidden; /* Quan trọng để cắt góc tam giác cho khớp bo tròn */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6); 
+            text-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+        }
+        .sb-aka { background: linear-gradient(135deg, #cc0000, #800000); border: 2px solid #ff3333; }
+        .sb-ao { background: linear-gradient(135deg, #0055ff, #002280); border: 2px solid #3388ff; }
+
+        /* --- SENSHU TAM GIÁC MỚI (Sử dụng ::after) --- */
+        /* Khi hộp điểm có class 'has-senshu', nó sẽ hiện tam giác */
+        .score-box.has-senshu::after {
+            content: 'S'; /* Chữ S bên trong */
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 90px;  /* Kích thước cạnh góc vuông */
+            height: 90px; /* Kích thước cạnh góc vuông */
+            background: var(--gold);
+            color: black;
+            /* Tạo hình tam giác vuông góc dưới bên phải */
+            clip-path: polygon(100% 0, 0% 100%, 100% 100%);
+            
+            /* Căn chỉnh chữ S vào góc */
+            display: flex;
+            justify-content: flex-end; /* Căn phải */
+            align-items: flex-end;     /* Căn dưới */
+            padding-right: 15px;       /* Đẩy chữ S vào trong một chút */
+            padding-bottom: 10px;      /* Đẩy chữ S lên trên một chút */
+            font-family: 'Orbitron';
+            font-weight: 900;
+            font-size: 3rem;
+            z-index: 2; /* Nằm trên số điểm */
+        }
+
+        /* (Đã xóa class .senshu cũ) */
+
+        .pen-row { display: flex; gap: 8px; }
+        .pen-box {
+            width: 40px; height: 40px; background: #222; border: 1px solid #444; color: #444;
+            display: flex; justify-content: center; align-items: center;
+            font-family: 'Orbitron'; font-weight: bold; font-size: 1rem; border-radius: 4px;
+        }
+        .pen-box.active { background: var(--gold); color: black; border-color: white; box-shadow: 0 0 10px var(--gold); }
+        .pen-box.hansoku { background: red; color: white; border-color: red; }
+
+        .timer-container { display: flex; justify-content: center; align-items: center; margin-top: 10px; }
+        .timer {
+            font-family: 'Orbitron'; font-size: 6rem; color: var(--gold);
+            background: #000; padding: 5px 60px; border-radius: 12px; 
+            border: 2px solid #333; letter-spacing: 5px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .footer { 
+            height: 8vh; background: #050505; border-top: 1px solid #333; 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 40px;
+        }
+        .cat-info { font-family: 'Orbitron'; font-size: 1.5rem; color: #fff; font-weight: bold; text-transform: uppercase; }
+        .phase-info { font-family: 'Orbitron'; font-size: 2rem; color: var(--gold); font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+
+        /* --- FLASH OVERLAY --- */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 99; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        
+        .flash-box {
+            padding: 30px 80px; border-radius: 20px; text-align: center;
+            transform: scale(0.5); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); min-width: 600px;
+        }
+        .overlay.active .flash-box { transform: scale(1.2); }
+
+        .flash-icon { font-size: 5rem; margin-bottom: 10px; }
+        .flash-text { font-size: 4rem; font-weight: 900; font-family: 'Orbitron'; text-transform: uppercase; line-height: 1; }
+        .flash-sub { font-size: 3rem; font-family: 'Orbitron'; font-weight: bold; opacity: 1; text-transform: uppercase; margin-top: 5px; }
+
+        /* MÀU SẮC THÔNG BÁO ĐIỂM */
+        .style-score-aka { 
+            background: linear-gradient(135deg, #cc0000, #990000); 
+            color: white; border: 4px solid #ff6666; 
+        }
+        .style-score-ao { 
+            background: linear-gradient(135deg, #0055ff, #0033aa); 
+            color: white; border: 4px solid #6699ff; 
+        }
+        
+        /* WARNING */
+        .style-warning { 
+            background: #ffcc00; color: black; border: 5px solid black;
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
+        }
+        
+        /* WINNER (VINH DANH) */
+        .style-winner { 
+            background: radial-gradient(circle, #222, #000); 
+            color: var(--gold); 
+            border: 4px solid var(--gold); 
+            box-shadow: 0 0 50px var(--gold);
+        }
+        .style-winner .flash-text { font-size: 3rem; color: #fff; letter-spacing: 5px; } 
+        .style-winner .flash-sub { font-size: 5rem; color: var(--gold); text-shadow: 0 0 20px var(--gold); } 
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="p-info aka">
+            <div class="team-row"><img id="flagAka" class="flag-img" src="" alt="flag"><div class="team" id="teamAka">AKA TEAM</div></div>
+            <div class="name" id="nameAka">AKA NAME</div>
+        </div>
+        <div class="p-info ao">
+            <div class="team-row"><img id="flagAo" class="flag-img" src="" alt="flag"><div class="team" id="teamAo">AO TEAM</div></div>
+            <div class="name" id="nameAo">AO NAME</div>
+        </div>
+    </div>
+
+    <div class="main-stage">
+        <div class="scores-row">
+            <div class="side-col">
+                <div class="score-box sb-aka" id="boxAka">
+                    <span id="scoreAka">0</span>
+                    </div>
+                <div class="pen-row" id="penAka">
+                    <div class="pen-box">1</div><div class="pen-box">2</div><div class="pen-box">3</div><div class="pen-box">HC</div><div class="pen-box">H</div>
+                </div>
+            </div>
+            <div class="side-col">
+                <div class="score-box sb-ao" id="boxAo">
+                    <span id="scoreAo">0</span>
+                    </div>
+                <div class="pen-row" id="penAo">
+                    <div class="pen-box">1</div><div class="pen-box">2</div><div class="pen-box">3</div><div class="pen-box">HC</div><div class="pen-box">H</div>
+                </div>
+            </div>
+        </div>
+        <div class="timer-container"><div class="timer" id="timer">03:00</div></div>
+    </div>
+
+    <div class="footer">
+        <div class="cat-info" id="catName">KUMITE</div>
+        <div class="phase-info" id="phaseName">ROUND 1</div>
+    </div>
+
+    <div id="overlay" class="overlay">
+        <div id="flashBox" class="flash-box">
+            <div id="flashIcon" class="flash-icon"></div>
+            <div id="flashText" class="flash-text">TEXT</div>
+            <div id="flashSub" class="flash-sub"></div>
+        </div>
+    </div>
+
+    <script>
+        const channel = new BroadcastChannel('karate_channel');
+        const FLAG_MAP = { "VIET NAM": "vn", "VIETNAM": "vn", "VN": "vn", "NHAT BAN": "jp", "JAPAN": "jp", "JP": "jp", "THAI LAN": "th", "THAILAND": "th", "TH": "th", "HAN QUOC": "kr", "KOREA": "kr", "MY": "us", "USA": "us", "TRUNG QUOC": "cn", "CHINA": "cn" };
+
+        function setFlag(elementId, teamName) {
+            const img = document.getElementById(elementId);
+            if (!teamName) { img.style.display = 'none'; return; }
+            let cleanName = teamName.toUpperCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/Đ/g, "D");
+            const code = FLAG_MAP[cleanName];
+            if (code) { img.src = `https://flagcdn.com/w160/${code}.png`; img.style.display = 'block'; } else { img.style.display = 'none'; }
+        }
+
+        channel.onmessage = (e) => {
+            const d = e.data;
+            if(d.type === 'UPDATE_INFO') {
+                document.getElementById('nameAka').innerText = d.p1 || "AKA";
+                document.getElementById('nameAo').innerText = d.p2 || "AO";
+                document.getElementById('teamAka').innerText = d.team1 || "";
+                document.getElementById('teamAo').innerText = d.team2 || "";
+                setFlag('flagAka', d.team1); setFlag('flagAo', d.team2);
+                document.getElementById('catName').innerText = d.category || "KUMITE";
+                document.getElementById('phaseName').innerText = d.phase || ""; 
+            }
+            if(d.type === 'UPDATE_STATE') {
+                document.getElementById('scoreAka').innerText = (d.akaScore !== undefined) ? d.akaScore : 0;
+                document.getElementById('scoreAo').innerText = (d.aoScore !== undefined) ? d.aoScore : 0;
+
+                // --- XỬ LÝ SENSHU MỚI (Thêm/Bớt class vào hộp điểm) ---
+                const boxAka = document.getElementById('boxAka');
+                const boxAo = document.getElementById('boxAo');
+
+                if (d.senshu === 'aka') {
+                    boxAka.classList.add('has-senshu');
+                    boxAo.classList.remove('has-senshu');
+                } else if (d.senshu === 'ao') {
+                    boxAo.classList.add('has-senshu');
+                    boxAka.classList.remove('has-senshu');
+                } else {
+                    // Không ai có hoặc reset
+                    boxAka.classList.remove('has-senshu');
+                    boxAo.classList.remove('has-senshu');
+                }
+                // ------------------------------------------------------
+
+                drawPen('penAka', d.akaPen); drawPen('penAo', d.aoPen);
+            }
+            if(d.type === 'UPDATE_TIMER') {
+                const t = document.getElementById('timer');
+                t.innerText = d.time; t.style.color = d.isWarning ? 'red' : '#ffd700';
+            }
+
+            // --- XỬ LÝ HIỆN THÔNG BÁO ---
+            if(d.type === 'SHOW_ACTION') {
+                if(d.action === 1) showFlash("1 POINT", "YUKO", d.side, "score");
+                else if(d.action === 2) showFlash("2 POINTS", "WAZA-ARI", d.side, "score");
+                else if(d.action === 3) showFlash("3 POINTS", "IPPON", d.side, "score");
+                else if(d.action === 4) showFlash("WARNING", "CATEGORY 1 / 2", "warning", "warning");
+                // Senshu không hiện flash nữa
+            }
+            
+            if(d.type === 'SHOW_WINNER') {
+                showFlash("WINNER", d.name, "winner", "winner");
+            }
+            if(d.type === 'SHOW_CHAMPION') {
+                showFlash("CHAMPION", d.name, "winner", "winner");
+            }
+        };
+
+        function drawPen(id, lvl) {
+            const boxes = document.querySelectorAll(`#${id} .pen-box`);
+            boxes.forEach((b, i) => { b.className = 'pen-box'; if(i < lvl) b.classList.add('active'); if(i===4 && lvl>=5) b.classList.add('hansoku'); });
+        }
+
+        function showFlash(mainText, subText, type, style) {
+            const ov = document.getElementById('overlay');
+            const box = document.getElementById('flashBox');
+            const icon = document.getElementById('flashIcon');
+            
+            document.getElementById('flashText').innerText = mainText;
+            document.getElementById('flashSub').innerText = subText;
+            
+            box.className = 'flash-box'; icon.innerHTML = ''; 
+
+            if(style === 'score') {
+                box.classList.add(type === 'aka' ? 'style-score-aka' : 'style-score-ao');
+            } else if (style === 'warning') {
+                box.classList.add('style-warning');
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else if (style === 'winner') {
+                box.classList.add('style-winner');
+                icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+            }
+            
+            ov.style.display = 'flex';
+            setTimeout(() => ov.classList.add('active'), 10);
+            
+            const duration = (style === 'winner') ? 5000 : 2000;
+            setTimeout(() => { ov.classList.remove('active'); setTimeout(() => ov.style.display = 'none', 300); }, duration);
+        }
+    </script>
+</body>
+</html>

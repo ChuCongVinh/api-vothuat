@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLB Võ Thuật - Fullstack</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* CSS cho nút chọn vai trò trong Modal */
+        .role-choice-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: left;
+        }
+        .btn-admin { background-color: #dc3545; color: white; border-left: 6px solid #8a1f29; }
+        .btn-guest { background-color: #0d6efd; color: white; border-left: 6px solid #004085; }
+        .role-choice-btn:hover { opacity: 0.9; transform: translateX(5px); }
+        .role-icon { margin-right: 10px; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">KARATE CLUB</div>
+        <nav>
+            <ul id="menuList">
+                <li><a href="#">Trang chủ</a></li>
+                <li><a href="gioithieu.html">Giới thiệu</a></li>
+                <li><a href="#">Bài viết</a></li> 
+                <li><a href="#">Bộ Môn</a></li>  
+                <li><a href="#locations">Địa điểm</a></li>
+                
+                
+                
+                <li><a href="tournament_hub.html" style="color: #ffcc00; white-space: nowrap;">
+    <i class="fa-solid fa-trophy"></i> Giải đấu chuyên nghiệp
+</a></li>
+
+                <li><a href="#" onclick="openRoleModal()">Đăng nhập</a></li> 
+                <li><button class="btn-register" onclick="openModal()">Đăng ký tập thử</button></li>
+            </ul>
+        </nav>
+        <div class="menu-icon" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Trung Tâm Năng Khiếu Trí Đức</h1>
+            <h1>Đức Gieo - Trí Luyện - Tâm Sáng</h1>
+            <button onclick="scrollToLocations()">Xem Lịch Tập</button>
+        </div>
+    </section>
+
+    <section id="gallery" class="container">
+        <h2 class="section-title">KHOẢNH KHẮC TẬP LUYỆN</h2>
+        <p style="text-align: center; margin-bottom: 30px; color: #666;">
+            Nơi mồ hôi rơi xuống để bản lĩnh được nâng lên.
+        </p>
+
+        <div class="gallery-grid">
+            <div class="gallery-item" onclick="openGalleryModal('images/1.jpg', 'KHƠI DẬY BẢN LĨNH', 'Chiến thắng chính mình là chiến thắng hiển hách nhất.', 'info1')">
+                <img src="images/1.jpg" alt="Khơi dậy bản lĩnh">
+                <div class="overlay"><div class="text"><h3>KHƠI DẬY BẢN LĨNH</h3><p>Chiến thắng chính mình là chiến thắng hiển hách nhất.</p></div></div>
+            </div>
+            <div class="gallery-item" onclick="openGalleryModal('images/2.jpg', 'KỶ LUẬT THÉP', 'Kỷ luật là cầu nối giữa mục tiêu và thành tựu.', 'info2')">
+                <img src="images/2.jpg" alt="Kỷ luật thép">
+                <div class="overlay"><div class="text"><h3>KỶ LUẬT THÉP</h3><p>Kỷ luật là cầu nối giữa mục tiêu và thành tựu.</p></div></div>
+            </div>
+            <div class="gallery-item" onclick="openGalleryModal('images/3.jpg', 'ƯƠM MẦM TÀI NĂNG', 'Giúp trẻ phát triển toàn diện Thể chất & Tư duy.', 'info3')">
+                <img src="images/3.jpg" alt="Ươm mầm tài năng">
+                <div class="overlay"><div class="text"><h3>ƯƠM MẦM TÀI NĂNG</h3><p>Giúp trẻ phát triển toàn diện Thể chất & Tư duy.</p></div></div>
+            </div>
+            <div class="gallery-item" onclick="openGalleryModal('images/4.jpg', 'KỸ THUẬT CHUẨN MỰC', 'Từng động tác đều chứa đựng sự tập trung cao độ.', 'info4')">
+                <img src="images/4.jpg" alt="Kỹ thuật chuẩn mực">
+                <div class="overlay"><div class="text"><h3>KỸ THUẬT CHUẨN MỰC</h3><p>Từng động tác đều chứa đựng sự tập trung cao độ.</p></div></div>
+            </div>
+            <div class="gallery-item" onclick="openGalleryModal('images/5.jpg', 'ĐỐI KHÁNG MẠNH MẼ', 'Rèn luyện phản xạ và khả năng tự vệ thực chiến.', 'info5')">
+                <img src="images/5.jpg" alt="Đối kháng mạnh mẽ">
+                <div class="overlay"><div class="text"><h3>ĐỐI KHÁNG MẠNH MẼ</h3><p>Rèn luyện phản xạ và khả năng tự vệ thực chiến.</p></div></div>
+            </div>
+            <div class="gallery-item" onclick="openGalleryModal('images/6.jpg', 'TINH THẦN ĐỒNG ĐỘI', 'Cùng nhau luyện tập, cùng nhau tiến bộ.', 'info6')">
+                <img src="images/6.jpg" alt="Tinh thần đồng đội">
+                <div class="overlay"><div class="text"><h3>TINH THẦN ĐỒNG ĐỘI</h3><p>Cùng nhau luyện tập, cùng nhau tiến bộ.</p></div></div>
+            </div>
+            <div class="gallery-item" onclick="openGalleryModal('images/7.jpg', 'THỂ LỰC BỀN BỈ', 'Xây dựng nền tảng sức khỏe dẻo dai.', 'info7')">
+                <img src="images/7.jpg" alt="Thể lực bền bỉ">
+                <div class="overlay"><div class="text"><h3>THỂ LỰC BỀN BỈ</h3><p>Xây dựng nền tảng sức khỏe dẻo dai.</p></div></div>
+            </div>
+            <div class="gallery-item" onclick="openGalleryModal('images/8.jpg', 'KHÁT VỌNG CHIẾN THẮNG', 'Nơi vinh quang dành cho những người không bỏ cuộc.', 'info8')">
+                <img src="images/8.jpg" alt="Khát vọng chiến thắng">
+                <div class="overlay"><div class="text"><h3>KHÁT VỌNG CHIẾN THẮNG</h3><p>Nơi vinh quang dành cho những người không bỏ cuộc.</p></div></div>
+            </div>
+            <div class="gallery-item" onclick="openGalleryModal('images/9.jpg', 'ĐAM MÊ BẤT TẬN', 'Biến võ thuật trở thành một phần của cuộc sống.', 'info9')">
+                <img src="images/9.jpg" alt="Đam mê bất tận">
+                <div class="overlay"><div class="text"><h3>ĐAM MÊ BẤT TẬN</h3><p>Biến võ thuật trở thành một phần của cuộc sống.</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <div id="galleryDetailModal" class="gallery-modal-overlay">
+        <span class="gallery-close" onclick="closeGalleryModal()">&times;</span>
+        <div class="gallery-modal-content">
+            
+            <div class="gallery-image-zone">
+                <div class="zoom-controls">
+                    <button onclick="zoomGallery(0.2)" title="Phóng to"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                    <button onclick="zoomGallery(-0.2)" title="Thu nhỏ"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                    <button onclick="resetZoomGallery()" title="Mặc định"><i class="fa-solid fa-expand"></i></button>
+                </div>
+                <div class="img-pan-container" id="imgPanContainer">
+                    <img id="modalGalleryImg" src="" alt="Gallery Image">
+                </div>
+            </div>
+
+            <div class="gallery-info-zone">
+                <h2 id="modalGalleryTitle" style="color: #d32f2f; margin-bottom: 10px; text-transform: uppercase;">TIÊU ĐỀ</h2>
+                <h4 id="modalGalleryShort" style="color: #555; margin-bottom: 20px; font-style: italic;">Mô tả ngắn</h4>
+                <div style="border-top: 2px solid #eee; margin-bottom: 20px;"></div>
+                
+                <div id="modalGalleryLong" style="line-height: 1.8; color: #333; text-align: justify; font-size: 15px;">
+                    </div>
+                
+                <button class="btn-register" style="margin-top: 30px; width: 100%; padding: 15px; font-size: 16px;" onclick="closeGalleryModal(); openModal();">
+                    <i class="fa-solid fa-fire"></i> Đăng Ký Tập Ngay
+                </button>
+            </div>
+        </div>
+    </div>
+    <section id="tournament-feature" style="background: linear-gradient(45deg, #111, #333); padding: 60px 0; color: white; text-align: center;">
+        <div class="container">
+            <h2 class="section-title" style="color: #ffcc00;">HỆ THỐNG THI ĐẤU CHUYÊN NGHIỆP</h2>
+            <p style="margin-bottom: 30px; font-size: 1.1rem; opacity: 0.9;">
+                Theo dõi tỉ số trực tiếp, cập nhật kết quả thi đấu thời gian thực theo tiêu chuẩn quốc tế.
+            </p>
+
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                
+                
+
+                <a href="tournament_hub.html" class="tournament-btn btn-setup">
+    <i class="fa-solid fa-trophy"></i> Vào Khu Vực Giải Đấu
+</a>
+
+            </div>
+        </div>
+    </section>
+    <section id="locations" class="container">
+        <h2 class="section-title">HỆ THỐNG CÁC VÕ ĐƯỜNG</h2>
+        <div id="location-list" class="location-grid">
+            <p>Đang tải dữ liệu từ máy chủ...</p>
+        </div>
+    </section>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Đăng Ký Tập Thử</h2>
+            <form id="registerForm">
+                <input type="text" id="userName" placeholder="Họ và tên của bạn" required>
+                <input type="tel" id="userPhone" placeholder="Số điện thoại" required>
+                
+                <select id="userSubject" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="Karate">Karate (Mặc định)</option>
+                    <option value="Vovinam">Vovinam</option>
+                    <option value="Dance">Nhảy hiện đại</option>
+                </select>
+
+                <select id="userLocation">
+                    <option value="">Chọn cơ sở tập luyện...</option>
+                </select>
+                <button type="submit">Gửi Đăng Ký</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="roleModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close" onclick="closeRoleModal()">&times;</span>
+            <h2 style="margin-bottom: 20px;">Đăng Nhập Hệ Thống</h2>
+            <p>Vui lòng chọn vai trò để tiếp tục:</p>
+            
+            <button class="role-choice-btn btn-admin" onclick="selectRole('admin')">
+                <i class="fa-solid fa-user-shield role-icon"></i> Quản Trị Viên (Admin)
+            </button>
+            
+            <button class="role-choice-btn btn-guest" onclick="selectRole('guest')">
+                <i class="fa-solid fa-user role-icon"></i> Khách Hàng / Học Viên
+            </button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Câu Lạc Bộ Karate.</p>
+        <p style="margin-top: 15px; font-size: 16px;">
+            Theo dõi và kết nối với chúng tôi tại: <br>
+            <a href="https://www.facebook.com/people/Trung-T%C3%A2m-N%C4%83ng-Khi%E1%BA%BFu-Tr%C3%AD-%C4%90%E1%BB%A9c/61579846201465/" target="_blank" style="color: #1877f2; font-weight: bold; text-decoration: none; display: inline-block; margin-top: 8px; font-size: 18px;">
+                <i class="fa-brands fa-facebook"></i> Fanpage Trung Tâm Năng Khiếu Trí Đức
+            </a>
+        </p>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <script>
+        // --- 1. XỬ LÝ MODAL ---
+        function openRoleModal() {
+            document.getElementById('roleModal').style.display = 'block';
+        }
+
+        function closeRoleModal() {
+            document.getElementById('roleModal').style.display = 'none';
+        }
+
+        function selectRole(role) {
+            window.location.href = `login.html?role=${role}`;
+        }
+
+        // Đóng modal khi click ra ngoài vùng trắng
+        window.onclick = function(event) {
+            let roleModal = document.getElementById('roleModal');
+            let regModal = document.getElementById('registerModal');
+            
+            if (event.target == roleModal) {
+                closeRoleModal();
+            }
+            if (event.target == regModal) {
+                if(typeof closeModal === 'function') {
+                    closeModal();
+                } else {
+                    regModal.style.display = "none";
+                }
+            }
+        }
+
+        // --- 2. XỬ LÝ HIỂN THỊ TRẠNG THÁI ĐĂNG NHẬP ---
+        window.onload = function() {
+            // Check LocalStorage xem đã đăng nhập chưa
+            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const username = localStorage.getItem('currentUser');
+            const role = localStorage.getItem('role');
+
+            const menuList = document.getElementById('menuList');
+
+            if (isLoggedIn === 'true' && username) {
+                // Nếu đã đăng nhập: Tìm và ẩn nút "Đăng nhập"
+                const links = menuList.getElementsByTagName('a');
+                for (let i = 0; i < links.length; i++) {
+                    if (links[i].innerText.includes("Đăng nhập") || links[i].getAttribute('onclick')?.includes('openRoleModal')) {
+                        links[i].parentElement.style.display = 'none'; // Ẩn nút đăng nhập
+                    }
+                }
+
+                // Thêm dòng "Xin chào" vào menu
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <a href="#" style="color: #0d6efd; font-weight: bold;">👋 Xin chào, ${username}</a>
+                    <a href="#" onclick="handleLogout()" style="color: red; font-size: 0.9em;">(Đăng xuất)</a>
+                `;
+                menuList.appendChild(li);
+            }
+        };
+
+        // --- 3. HÀM ĐĂNG XUẤT ---
+        function handleLogout() {
+            // Xóa toàn bộ thông tin đăng nhập trong bộ nhớ
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('role');
+            
+            alert("Đã đăng xuất thành công!");
+            location.reload(); // Tải lại trang để cập nhật giao diện
+        }
+    </script>
+</body>
+</html>

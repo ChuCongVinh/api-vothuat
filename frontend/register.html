@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký Tài Khoản</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; font-family: 'Roboto', sans-serif; margin: 0; }
+        .register-box { background: white; padding: 40px; border-radius: 10px; width: 350px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .register-box h2 { color: #0d6efd; margin-bottom: 20px; text-transform: uppercase; }
+        .register-box input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+        .register-box input:focus { border-color: #0d6efd; outline: none; }
+        .register-box button { width: 100%; padding: 12px; background: #0d6efd; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 16px; transition: 0.3s; }
+        .register-box button:hover { background: #0b5ed7; }
+        .link-login { display: block; margin-top: 20px; text-decoration: none; color: #555; font-size: 14px; }
+        .link-login a { color: #0d6efd; font-weight: bold; text-decoration: none; }
+        .link-login a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="register-box">
+        <h2>ĐĂNG KÝ HỌC VIÊN</h2>
+        
+        <form onsubmit="handleRegister(event)">
+            <input type="text" id="fullname" placeholder="Họ và tên đầy đủ" required>
+            <input type="text" id="username" placeholder="Tên đăng nhập (viết liền)" required>
+            <input type="password" id="password" placeholder="Mật khẩu" required>
+            <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu" required>
+            
+            <button type="submit" id="btnSubmit">ĐĂNG KÝ TÀI KHOẢN</button>
+        </form>
+
+        <p id="msg" style="color: red; margin-top: 10px; font-size: 14px;"></p>
+
+        <div class="link-login">
+            Đã có tài khoản? <a href="login.html">Đăng nhập ngay</a>
+        </div>
+    </div>
+
+    <script>
+        async function handleRegister(event) {
+            event.preventDefault(); 
+            
+            const fullname = document.getElementById('fullname').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+            const msg = document.getElementById('msg');
+            const btn = document.getElementById('btnSubmit');
+
+            // 1. Validate
+            if (password !== confirmPass) {
+                msg.innerText = "❌ Mật khẩu nhập lại không khớp!";
+                return;
+            }
+            if (username.includes(" ")) {
+                msg.innerText = "❌ Tên đăng nhập không được có khoảng trắng!";
+                return;
+            }
+
+            msg.innerText = "⏳ Đang xử lý...";
+            msg.style.color = "#0d6efd";
+            btn.disabled = true;
+
+            try {
+                // --- SỬA QUAN TRỌNG: GỌI ĐÚNG API /api/users ---
+                const res = await fetch('http://localhost:3000/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        fullname: fullname,
+                        username: username, 
+                        password: password,
+                        role: 'student',       // Mặc định là học viên
+                        status: 'Chờ duyệt'    // Trạng thái chờ
+                    })
+                });
+
+                // Kiểm tra kết nối mạng
+                if (!res.ok && res.status !== 400) {
+                    throw new Error("Lỗi kết nối Server");
+                }
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert("✅ Đăng ký thành công! Hãy đăng nhập ngay.");
+                    window.location.href = 'login.html';
+                } else {
+                    msg.style.color = "red";
+                    msg.innerText = "❌ " + (data.message || "Tên đăng nhập đã tồn tại!");
+                    btn.disabled = false;
+                }
+
+            } catch (error) {
+                console.error(error);
+                msg.style.color = "red";
+                msg.innerText = "❌ Không thể kết nối Server! Kiểm tra 'node server.js'";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

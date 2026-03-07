@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thiết Lập Giải Đấu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .setup-box { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 450px; }
+        h1 { color: #333; margin-bottom: 20px; text-transform: uppercase; font-size: 1.5rem; }
+        
+        .upload-area { border: 2px dashed #ccc; padding: 30px; border-radius: 10px; cursor: pointer; transition: 0.3s; position: relative; background: #fafafa; }
+        .upload-area:hover { border-color: #0d6efd; background: #f0f8ff; }
+        .upload-area i { font-size: 3rem; color: #aaa; margin-bottom: 10px; }
+        
+        #fileInput { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
+        #fileName { margin-top: 10px; font-weight: bold; color: #0d6efd; display: block; font-size: 0.9rem; }
+        
+        .btn-start { background: #28a745; color: white; border: none; padding: 12px 30px; border-radius: 30px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; transition: 0.2s; }
+        .btn-start:hover { background: #218838; transform: translateY(-2px); }
+        .btn-start:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+        .loader { display: none; margin-top: 15px; color: #666; }
+
+        /* KHUNG HƯỚNG DẪN */
+        .instruction-box {
+            margin-top: 25px;
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #555;
+            border-left: 5px solid #0d6efd;
+        }
+        .instruction-box h4 { margin: 0 0 10px 0; color: #333; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+        .instruction-box ul { margin: 0; padding-left: 20px; line-height: 1.6; }
+        .instruction-box li { margin-bottom: 5px; }
+        .code-snippet { background: #fff; padding: 2px 5px; border-radius: 4px; font-family: monospace; color: #d63384; font-weight: bold; border: 1px solid #ddd; }
+        
+        .mini-table { width: 100%; margin-top: 10px; border-collapse: collapse; background: white; font-size: 0.8rem; }
+        .mini-table th, .mini-table td { border: 1px solid #ccc; padding: 4px; text-align: center; }
+        .mini-table th { background: #ddd; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="setup-box">
+        <h1><i class="fa-solid fa-gear"></i> Thiết Lập Giải Đấu</h1>
+        
+        <div class="upload-area">
+            <input type="file" id="fileInput" accept=".xlsx, .xls" onchange="handleFileSelect()">
+            <i class="fa-solid fa-file-excel"></i>
+            <div>Kéo thả hoặc chọn file Excel danh sách VĐV</div>
+        </div>
+        
+        <span id="fileName">Chưa chọn file</span>
+
+        <button id="btnSubmit" class="btn-start" onclick="uploadAndStart()" disabled>
+            BỐC THĂM & CHIA BẢNG
+        </button>
+
+        <div class="loader" id="loader">
+            <i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...
+        </div>
+
+        <div class="instruction-box">
+            <h4><i class="fa-solid fa-circle-info"></i> LƯU Ý QUAN TRỌNG:</h4>
+            <ul>
+                <li>
+                    <strong>Tên file Excel:</strong> Đặt theo tên hạng cân để hiển thị lên TV.
+                    <br>VD: <span class="code-snippet">Kumite Nam 60kg.xlsx</span>
+                </li>
+                <li>
+                    <strong>Cấu trúc Excel:</strong> Sheet 1, Dữ liệu bắt đầu từ <strong>Dòng 2</strong> (Dòng 1 là tiêu đề).
+                </li>
+                <li>
+                    <strong>Cột B (Đoàn):</strong> Nhập tên nước (VD: <em>Vietnam, Japan</em>) để tự động hiện Quốc kỳ.
+                </li>
+            </ul>
+            
+            <table class="mini-table">
+                <tr>
+                    <th>A (Họ Tên)</th>
+                    <th>B (Đoàn/Q.Gia)</th>
+                </tr>
+                <tr>
+                    <td>Nguyễn Văn A</td>
+                    <td>Vietnam</td>
+                </tr>
+                <tr>
+                    <td>Tanaka</td>
+                    <td>Japan</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function handleFileSelect() {
+            const fileInput = document.getElementById('fileInput');
+            const fileNameDisplay = document.getElementById('fileName');
+            const btn = document.getElementById('btnSubmit');
+
+            if (fileInput.files.length > 0) {
+                fileNameDisplay.innerText = fileInput.files[0].name;
+                btn.disabled = false;
+            } else {
+                fileNameDisplay.innerText = "Chưa chọn file";
+                btn.disabled = true;
+            }
+        }
+
+        async function uploadAndStart() {
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length === 0) return;
+
+            const file = fileInput.files[0];
+            
+            // XỬ LÝ TÊN FILE THÀNH TÊN HẠNG CÂN
+            let categoryName = file.name.replace(/\.[^/.]+$/, ""); // Bỏ đuôi .xlsx
+            categoryName = categoryName.toUpperCase().replace(/-/g, " - "); // Viết hoa & đẹp hơn
+            
+            localStorage.setItem('lastCategory', categoryName); 
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('btnSubmit').disabled = true;
+
+            try {
+                const res = await fetch('http://localhost:3000/api/tournament/start', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    setTimeout(() => {
+                        window.location.href = 'bracket.html';
+                    }, 1000);
+                } else {
+                    alert("Lỗi: " + data.message);
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('btnSubmit').disabled = false;
+                }
+            } catch (e) {
+                alert("Không thể kết nối Server! Hãy kiểm tra 'node server.js'");
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('btnSubmit').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
