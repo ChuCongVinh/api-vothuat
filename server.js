@@ -26,11 +26,14 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ============================================================
 // 1. KẾT NỐI DATABASE
 // ============================================================
-const db = mysql.createConnection({
+const db = mysql.createPool({
     host: '202.92.4.66', // Đã thay bằng IP của Hosting 1Panel
     user: 'jxcjzqgbhosting_Chucongvinh2004', 
     password: 'Chucongvinh2004@', 
-    database: 'jxcjzqgbhosting_nangkhieuTriDuc' 
+    database: 'jxcjzqgbhosting_nangkhieuTriDuc' ,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
 db.connect((err) => {
