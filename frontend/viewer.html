@@ -329,27 +329,33 @@
         /* GIAO DIỆN LỖI WARNING MỚI (Màu đỏ/xanh theo VĐV) */
         .style-warning-aka { 
             background: radial-gradient(circle at center, #cc0000 0%, #440000 100%); 
-            border: 25px solid #ffcc00; /* Viền vàng báo động */
+            border: 25px solid #ffcc00; 
         }
         .style-warning-aka .flash-text, .style-warning-aka .flash-icon { color: #ffcc00; text-shadow: 0 0 30px rgba(255, 204, 0, 0.8); }
         .style-warning-aka .flash-sub { color: #fff; }
 
         .style-warning-ao { 
             background: radial-gradient(circle at center, #0055ff 0%, #001155 100%); 
-            border: 25px solid #ffcc00; /* Viền vàng báo động */
+            border: 25px solid #ffcc00; 
         }
         .style-warning-ao .flash-text, .style-warning-ao .flash-icon { color: #ffcc00; text-shadow: 0 0 30px rgba(255, 204, 0, 0.8); }
         .style-warning-ao .flash-sub { color: #fff; }
         
-        /* WINNER (VINH DANH) */
-        .style-winner { 
-            background: radial-gradient(circle, #222, #000); 
+        /* WINNER (VINH DANH) - CÓ MÀU ĐỎ/XANH CỦA VĐV */
+        .style-winner-aka { 
+            background: radial-gradient(circle at center, #cc0000 0%, #330000 100%); 
             color: var(--gold); 
             border: 20px solid var(--gold); 
             box-shadow: inset 0 0 150px var(--gold);
         }
-        .style-winner .flash-text { font-size: 6rem; color: #fff; letter-spacing: 15px; } 
-        .style-winner .flash-sub { font-size: 8rem; color: var(--gold); text-shadow: 0 0 50px var(--gold); } 
+        .style-winner-ao { 
+            background: radial-gradient(circle at center, #0055ff 0%, #001144 100%); 
+            color: var(--gold); 
+            border: 20px solid var(--gold); 
+            box-shadow: inset 0 0 150px var(--gold);
+        }
+        .style-winner-aka .flash-text, .style-winner-ao .flash-text { font-size: 6rem; color: #fff; letter-spacing: 15px; } 
+        .style-winner-aka .flash-sub, .style-winner-ao .flash-sub { font-size: 8rem; color: var(--gold); text-shadow: 0 0 50px #000; } 
     </style>
 </head>
 <body>
@@ -505,19 +511,17 @@
                 else if(d.action === 2) showFlash("2 POINTS", "WAZA-ARI", d.side, "score");
                 else if(d.action === 3) showFlash("3 POINTS", "IPPON", d.side, "score");
                 else if(d.action === 4) {
-                    // Dòng này sẽ lấy tên lỗi (1, 2, 3, HC, H) do trang Admin gửi sang
-                    // Nếu admin không gửi text, nó sẽ hiện tạm chữ "PENALTY"
                     let penaltyName = d.text || "PENALTY"; 
                     showFlash("WARNING", penaltyName, d.side, "warning");
                 }
             }
             
             if(d.type === 'SHOW_WINNER') {
-                showFlash("WINNER", d.name, "winner", "winner");
+                showFlash("WINNER", d.name, d.side, "winner");
             }
             
             if(d.type === 'SHOW_CHAMPION') {
-                showFlash("CHAMPION", d.name, "winner", "winner");
+                showFlash("CHAMPION", d.name, d.side, "winner");
             }
         };
 
@@ -530,10 +534,18 @@
             });
         }
 
+        // --- HÀM SHOW FLASH MỚI CÓ TÍNH NĂNG XÓA XUNG ĐỘT ---
+        let flashTime1, flashTime2, flashTime3;
+
         function showFlash(mainText, subText, type, style) {
             const ov = document.getElementById('overlay');
             const box = document.getElementById('flashBox');
             const icon = document.getElementById('flashIcon');
+            
+            // Hủy ngay lập tức các lệnh "đóng bảng" của hiệu ứng cũ
+            clearTimeout(flashTime1);
+            clearTimeout(flashTime2);
+            clearTimeout(flashTime3);
             
             document.getElementById('flashText').innerText = mainText;
             document.getElementById('flashSub').innerText = subText;
@@ -544,21 +556,22 @@
             if(style === 'score') {
                 box.classList.add(type === 'aka' ? 'style-score-aka' : 'style-score-ao');
             } else if (style === 'warning') {
-                // Tự động nhận diện bên lỗi (Aka hay Ao) để đổi màu nền
                 box.classList.add(type === 'aka' ? 'style-warning-aka' : 'style-warning-ao');
                 icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
             } else if (style === 'winner') {
-                box.classList.add('style-winner');
+                // Đã thay đổi: Màu bảng Winner phụ thuộc vào phe Aka hoặc Ao thắng
+                box.classList.add(type === 'aka' ? 'style-winner-aka' : 'style-winner-ao');
                 icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
             }
             
             ov.style.display = 'flex';
-            setTimeout(() => ov.classList.add('active'), 10);
+            flashTime1 = setTimeout(() => ov.classList.add('active'), 10);
             
-            const duration = (style === 'winner') ? 5000 : 2000;
-            setTimeout(() => { 
+            // Kéo dài thời gian hiển thị WINNER lên 6 giây, các hiệu ứng khác 2 giây
+            const duration = (style === 'winner') ? 6000 : 2000;
+            flashTime2 = setTimeout(() => { 
                 ov.classList.remove('active'); 
-                setTimeout(() => ov.style.display = 'none', 300); 
+                flashTime3 = setTimeout(() => ov.style.display = 'none', 300); 
             }, duration);
         }
     </script>
