@@ -173,10 +173,13 @@
         const urlParams = new URLSearchParams(window.location.search);
         const matchId = urlParams.get('matchId');
 
+        // BỎ LOCAL - CHUYỂN TOÀN BỘ API VỀ DOMAIN CHÍNH THỨC
+        const API_BASE = 'https://nangkhietruduc.com/api';
+
         async function init() {
             if(!matchId) { alert("Thiếu ID trận đấu!"); return; }
             try {
-                const res = await fetch(`https://nangkhieutriduc.com/api/tournament/match/${matchId}`);
+                const res = await fetch(`${API_BASE}/tournament/match/${matchId}`);
                 if(!res.ok) throw new Error("Lỗi tải");
                 const match = await res.json();
                 document.getElementById('nameAka').value = match.p1;
@@ -185,14 +188,14 @@
                 document.getElementById('teamAo').value = match.team2 || "";
                 document.getElementById('matchIDDisplay').innerText = `TRẬN #${match.id}`;
 
-                // --- GỌI API SET ACTIVE ĐỂ HIỂN THỊ LÊN MÀN HÌNH LED ---
-                fetch('https://nangkhieutriduc.com/api/tournament/match/start', {
+                // --- GỌI API SET ACTIVE ---
+                fetch(`${API_BASE}/tournament/match/start`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ matchId: matchId })
                 });
 
-                const bRes = await fetch('https://nangkhieutriduc.com/api/tournament/bracket');
+                const bRes = await fetch(`${API_BASE}/tournament/bracket`);
                 const bracket = await bRes.json();
                 let matchesInRound1 = bracket.rounds && bracket.rounds.length > 0 ? bracket.rounds[0].length : 0;
                 const totalTheoreticalRounds = Math.ceil(Math.log2(matchesInRound1 * 2));
@@ -214,7 +217,10 @@
         }
         function broadcastState() { channel.postMessage({ type: 'UPDATE_STATE', ...gameState }); }
         function broadcastTimer(display, warn) { channel.postMessage({ type: 'UPDATE_TIMER', time: display, isWarning: warn }); }
-        function broadcastAction(side, action) { channel.postMessage({ type: 'SHOW_ACTION', side, action }); }
+        
+        function broadcastAction(side, action, penaltyText = null) { 
+            channel.postMessage({ type: 'SHOW_ACTION', side, action, text: penaltyText }); 
+        }
 
         function updateScore(side, points) {
             if (isMatchEnded) return;
@@ -236,9 +242,17 @@
 
         function setPenalty(side, level) {
             if (isMatchEnded) return;
+            
+            const penaltyNames = {1: '1', 2: '2', 3: '3', 4: 'HC', 5: 'H'};
+            let currentPenaltyName = penaltyNames[level];
+
             if(side === 'aka') gameState.akaPen = (gameState.akaPen === level) ? 0 : level;
             else gameState.aoPen = (gameState.aoPen === level) ? 0 : level;
-            if(gameState.akaPen > 0 || gameState.aoPen > 0) broadcastAction(side, 4);
+            
+            if(gameState.akaPen > 0 || gameState.aoPen > 0) {
+                broadcastAction(side, 4, currentPenaltyName);
+            }
+            
             renderUI();
 
             // TỰ ĐỘNG KẾT THÚC KHI HANSOKU
@@ -274,9 +288,8 @@
                 timer.interval = setInterval(() => {
                     if (timer.time > 0) { timer.time--; renderTimer(); }
                     else { 
-                        // --- XỬ LÝ HẾT GIỜ (NEW) ---
-                        toggleTimer(); // Dừng đồng hồ
-                        checkTimeUpWinner(); // Tự động xét người thắng
+                        toggleTimer(); 
+                        checkTimeUpWinner(); 
                     }
                 }, 1000);
             } else clearInterval(timer.interval);
@@ -288,26 +301,21 @@
         }
         function resetMatchData() { if(confirm("Reset điểm?")) { isMatchEnded = false; gameState = { akaScore: 0, aoScore: 0, akaPen: 0, aoPen: 0, senshu: null }; resetTimer(); renderUI(); } }
 
-        // --- LOGIC HẾT GIỜ MỚI ---
         function checkTimeUpWinner() {
-            // So sánh điểm
             if (gameState.akaScore > gameState.aoScore) {
                 declareWinner('aka', "HẾT GIỜ - TÍNH ĐIỂM");
             } else if (gameState.aoScore > gameState.akaScore) {
                 declareWinner('ao', "HẾT GIỜ - TÍNH ĐIỂM");
             } else {
-                // Hòa điểm -> Xét Senshu
                 if (gameState.senshu === 'aka') declareWinner('aka', "HẾT GIỜ - ƯU THẾ SENSHU");
                 else if (gameState.senshu === 'ao') declareWinner('ao', "HẾT GIỜ - ƯU THẾ SENSHU");
                 else {
-                    // Hòa tuyệt đối -> Hỏi Hantei
                     let choice = confirm("HẾT GIỜ (HÒA)!\nBấm OK để AKA thắng Hantei.\nBấm Cancel để AO thắng Hantei.");
                     declareWinner(choice ? 'aka' : 'ao', "QUYẾT ĐỊNH TRỌNG TÀI (HANTEI)");
                 }
             }
         }
 
-        // --- HÀM MỚI: TUYÊN BỐ THẮNG CUỘC TỰ ĐỘNG ---
         async function declareWinner(winnerSide, reason) {
             if(isMatchEnded) return; 
             isMatchEnded = true;
@@ -315,19 +323,17 @@
 
             const wName = winnerSide === 'aka' ? document.getElementById('nameAka').value : document.getElementById('nameAo').value;
 
-            // Gửi sang Viewer
             channel.postMessage({ type: 'SHOW_WINNER', name: wName, side: winnerSide });
 
-            // GỌI API - ĐÃ SỬA ĐỂ GỬI ĐIỂM SỐ
             try {
-                const res = await fetch('https://nangkhieutriduc.com/api/tournament/winner', {
+                const res = await fetch(`${API_BASE}/tournament/winner`, {
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         matchId: matchId,
                         winnerName: wName,
-                        score1: gameState.akaScore, // <--- ĐÃ THÊM: Gửi điểm Aka
-                        score2: gameState.aoScore   // <--- ĐÃ THÊM: Gửi điểm Ao
+                        score1: gameState.akaScore, 
+                        score2: gameState.aoScore   
                     })
                 });
                 const data = await res.json();
@@ -337,7 +343,6 @@
                 }
             } catch(e) { console.error("Lỗi lưu kết quả", e); }
 
-            // Hiện Modal
             document.getElementById('winReason').innerText = reason;
             document.getElementById('winResult').innerHTML = `<span style="color:${winnerSide==='aka'?'red':'blue'}">${wName} THẮNG</span>`;
             document.getElementById('resultModal').style.display = 'flex';

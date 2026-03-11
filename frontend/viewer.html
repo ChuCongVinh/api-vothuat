@@ -114,7 +114,7 @@
             flex: 1; 
             display: flex; 
             flex-direction: column; 
-            justify-content: space-evenly; /* Chia đều khoảng cách */
+            justify-content: space-evenly; 
             align-items: center; 
             background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
             padding: 10px 0;
@@ -125,18 +125,17 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            gap: 120px; /* Tăng khoảng cách 2 hộp điểm */
+            gap: 120px; 
             width: 100%; 
         }
 
-        /* --- HỘP ĐIỂM KHỔNG LỒ (SCORE BOX TO HƠN) --- */
         .score-box { 
-            width: 380px;  /* To hơn rõ rệt */
-            height: 270px; /* To hơn rõ rệt */
+            width: 380px;  
+            height: 270px; 
             display: flex; 
             justify-content: center; 
             align-items: center;
-            font-size: 15rem; /* Font chữ điểm cực to */
+            font-size: 15rem; 
             font-family: 'Roboto'; 
             font-weight: 900;
             color: white; 
@@ -158,7 +157,6 @@
             border: 3px solid #3388ff; 
         }
 
-        /* --- SENSHU TAM GIÁC (TO THEO HỘP ĐIỂM) --- */
         .score-box.has-senshu::after {
             content: 'S'; 
             position: absolute;
@@ -180,19 +178,18 @@
             z-index: 2; 
         }
 
-        /* --- KHU VỰC WARNING KÉO DÀI 2 BÊN --- */
         .warning-container {
             display: flex;
-            justify-content: space-between; /* Đẩy 2 cột lỗi sát ra 2 viền */
+            justify-content: space-between; 
             align-items: center;
             width: 100%;
-            padding: 0 60px; /* Căn lề trái phải */
+            padding: 0 60px; 
             box-sizing: border-box;
         }
 
         .warning-label {
             font-family: 'Orbitron';
-            font-size: 3.5rem; /* Chữ Warning to hơn */
+            font-size: 3.5rem; 
             color: var(--gold);
             font-weight: 900;
             letter-spacing: 10px;
@@ -205,7 +202,7 @@
         }
 
         .pen-box {
-            width: 65px; /* Ô lỗi to hơn */
+            width: 65px; 
             height: 65px; 
             background: #222; 
             border: 2px solid #555; 
@@ -215,7 +212,7 @@
             align-items: center;
             font-family: 'Orbitron'; 
             font-weight: 900; 
-            font-size: 1.8rem; /* Chữ trong ô to hơn */
+            font-size: 1.8rem; 
             border-radius: 8px;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
         }
@@ -242,7 +239,7 @@
 
         .timer {
             font-family: 'Orbitron'; 
-            font-size: 7rem; /* Giờ to hơn chút */
+            font-size: 7rem; 
             color: var(--gold);
             background: #000; 
             padding: 5px 80px; 
@@ -253,14 +250,13 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.6);
         }
 
-        /* --- FOOTER (HỖ TRỢ XUỐNG DÒNG) --- */
         .footer { 
-            min-height: 12vh; /* Cao hơn để chứa nhiều dòng */
+            min-height: 12vh; 
             background: #050505; 
             border-top: 2px solid #333; 
             display: flex; 
             justify-content: space-between; 
-            align-items: flex-end; /* Đẩy chữ sát xuống dưới */
+            align-items: flex-end; 
             padding: 15px 40px;
             box-sizing: border-box;
         }
@@ -271,7 +267,7 @@
             color: #fff; 
             font-weight: bold; 
             text-transform: uppercase; 
-            line-height: 1.5; /* Giãn dòng cho đẹp */
+            line-height: 1.5; 
             text-align: left;
         }
 
@@ -288,7 +284,7 @@
         .overlay { 
             position: fixed; 
             inset: 0; 
-            background: rgba(0,0,0,0.95); /* Tối hơn để nổi bật thông báo */
+            background: rgba(0,0,0,0.95); 
             z-index: 99; 
             display: none; 
             align-items: center; 
@@ -297,11 +293,11 @@
         }
         
         .flash-box {
-            width: 100vw; /* Bắt buộc tràn viền ngang */
-            height: 100vh; /* Bắt buộc tràn viền dọc */
+            width: 100vw; 
+            height: 100vh; 
             border-radius: 0; 
             text-align: center;
-            transform: scale(0.9); /* Hiệu ứng zoom nhẹ */
+            transform: scale(0.9); 
             transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex; 
             flex-direction: column; 
@@ -315,9 +311,9 @@
 
         .flash-icon { font-size: 12rem; margin-bottom: 20px; text-shadow: 0 0 30px rgba(255,255,255,0.5); }
         .flash-text { font-size: 8rem; font-weight: 900; font-family: 'Orbitron'; text-transform: uppercase; line-height: 1; }
-        .flash-sub { font-size: 5rem; font-family: 'Orbitron'; font-weight: bold; opacity: 1; text-transform: uppercase; margin-top: 10px; }
+        .flash-sub { font-size: 6rem; font-family: 'Orbitron'; font-weight: bold; opacity: 1; text-transform: uppercase; margin-top: 10px; }
 
-        /* MÀU SẮC THÔNG BÁO ĐIỂM (Đã full màn hình) */
+        /* ĐIỂM SỐ */
         .style-score-aka { 
             background: radial-gradient(circle at center, #cc0000 0%, #330000 100%); 
             color: white; 
@@ -330,16 +326,20 @@
             border: 20px solid #3388ff; 
         }
         
-        /* GIAO DIỆN LỖI WARNING CỰC NGẦU (KIỂU HAZARD) */
-        .style-warning { 
-            background: repeating-linear-gradient(45deg, #111, #111 40px, #000 40px, #000 80px);
-            border: 30px solid #ffcc00;
-            color: #ffcc00;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+        /* GIAO DIỆN LỖI WARNING MỚI (Màu đỏ/xanh theo VĐV) */
+        .style-warning-aka { 
+            background: radial-gradient(circle at center, #cc0000 0%, #440000 100%); 
+            border: 25px solid #ffcc00; /* Viền vàng báo động */
         }
-        .style-warning .flash-text { color: #ffcc00; text-shadow: 0 0 30px rgba(255, 204, 0, 0.8); }
-        .style-warning .flash-sub { color: #fff; text-shadow: 2px 2px 5px #000; }
-        .style-warning .flash-icon { color: #ffcc00; }
+        .style-warning-aka .flash-text, .style-warning-aka .flash-icon { color: #ffcc00; text-shadow: 0 0 30px rgba(255, 204, 0, 0.8); }
+        .style-warning-aka .flash-sub { color: #fff; }
+
+        .style-warning-ao { 
+            background: radial-gradient(circle at center, #0055ff 0%, #001155 100%); 
+            border: 25px solid #ffcc00; /* Viền vàng báo động */
+        }
+        .style-warning-ao .flash-text, .style-warning-ao .flash-icon { color: #ffcc00; text-shadow: 0 0 30px rgba(255, 204, 0, 0.8); }
+        .style-warning-ao .flash-sub { color: #fff; }
         
         /* WINNER (VINH DANH) */
         .style-winner { 
@@ -348,7 +348,6 @@
             border: 20px solid var(--gold); 
             box-shadow: inset 0 0 150px var(--gold);
         }
-
         .style-winner .flash-text { font-size: 6rem; color: #fff; letter-spacing: 15px; } 
         .style-winner .flash-sub { font-size: 8rem; color: var(--gold); text-shadow: 0 0 50px var(--gold); } 
     </style>
@@ -467,7 +466,6 @@
                 setFlag('flagAka', d.team1); 
                 setFlag('flagAo', d.team2);
                 
-                // TỰ ĐỘNG XUỐNG DÒNG (Dấu phẩy hoặc gạch ngang sẽ được chuyển thành thẻ <br>)
                 let categoryText = d.category || "KUMITE";
                 document.getElementById('catName').innerHTML = categoryText.replace(/, /g, '<br>').replace(/ - /g, '<br>');
                 
@@ -506,7 +504,12 @@
                 if(d.action === 1) showFlash("1 POINT", "YUKO", d.side, "score");
                 else if(d.action === 2) showFlash("2 POINTS", "WAZA-ARI", d.side, "score");
                 else if(d.action === 3) showFlash("3 POINTS", "IPPON", d.side, "score");
-                else if(d.action === 4) showFlash("WARNING", "CATEGORY 1 / 2", "warning", "warning");
+                else if(d.action === 4) {
+                    // Dòng này sẽ lấy tên lỗi (1, 2, 3, HC, H) do trang Admin gửi sang
+                    // Nếu admin không gửi text, nó sẽ hiện tạm chữ "PENALTY"
+                    let penaltyName = d.text || "PENALTY"; 
+                    showFlash("WARNING", penaltyName, d.side, "warning");
+                }
             }
             
             if(d.type === 'SHOW_WINNER') {
@@ -541,7 +544,8 @@
             if(style === 'score') {
                 box.classList.add(type === 'aka' ? 'style-score-aka' : 'style-score-ao');
             } else if (style === 'warning') {
-                box.classList.add('style-warning');
+                // Tự động nhận diện bên lỗi (Aka hay Ao) để đổi màu nền
+                box.classList.add(type === 'aka' ? 'style-warning-aka' : 'style-warning-ao');
                 icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
             } else if (style === 'winner') {
                 box.classList.add('style-winner');
