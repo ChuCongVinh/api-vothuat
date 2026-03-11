@@ -15,35 +15,43 @@ app.use(express.static(path.join(__dirname, 'frontend')));
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ============================================================
-// 1. KẾT NỐI DATABASE
+// 1. KẾT NỐI DATABASE (CHẾ ĐỘ TỰ ĐỘNG HỒI SINH)
 // ============================================================
-// ============================================================
-// 1. KẾT NỐI DATABASE
-// ============================================================
-// ============================================================
-// 1. KẾT NỐI DATABASE
-// ============================================================
-// ============================================================
-// 1. KẾT NỐI DATABASE
-// ============================================================
-const db = mysql.createPool({
-    host: '202.92.4.66', // Đã thay bằng IP của Hosting 1Panel
+const db_config = {
+    host: '202.92.4.66', 
     user: 'jxcjzqgbhosting_Chucongvinh2004', 
     password: 'Chucongvinh2004@', 
-    database: 'jxcjzqgbhosting_nangkhieuTriDuc' ,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+    database: 'jxcjzqgbhosting_nangkhieuTriDuc'
+};
 
-db.getConnection((err, connection) => {
-    if (err) {
-        console.error('Lỗi kết nối MySQL:', err);
-        return;
-    }
-    console.log('✅ Đã kết nối MySQL thành công bằng Pool!');
-    connection.release(); // Trả kết nối lại cho hồ chứa để người khác dùng
-});
+let db;
+
+function handleDisconnect() {
+    db = mysql.createConnection(db_config); // Tạo kết nối mới
+
+    db.connect(function(err) {
+        if(err) {
+            console.log('❌ Lỗi khi kết nối Database:', err);
+            setTimeout(handleDisconnect, 2000); // Nếu lỗi, đợi 2 giây tự thử lại
+        } else {
+            console.log('✅ Đã kết nối MySQL thành công (Chế độ tự hồi sinh)!');
+        }
+    });
+
+    // Hệ thống lá chắn: Bắt mọi lỗi văng ra để web KHÔNG BỊ SẬP
+    db.on('error', function(err) {
+        console.log('⚠️ Phát hiện lỗi Database:', err.code);
+        if(err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ECONNRESET') {
+            console.log('🔄 Cáp bị đứt, đang tự động nối lại...');
+            handleDisconnect(); // Gọi lại hàm để tự kết nối mới
+        } else {
+            throw err;
+        }
+    });
+}
+
+// Khởi động bộ máy kết nối
+handleDisconnect();
 
 // ============================================================
 // 2. API QUẢN LÝ CÂU LẠC BỘ (CLUBS)
@@ -78,25 +86,21 @@ app.delete('/api/funds/:id', (req, res) => {
 });
 
 // ============================================================
-// 3. API QUẢN LÝ HỌC VIÊN (USERS) - [ĐÃ SỬA LỖI Ở ĐÂY]
+// 3. API QUẢN LÝ HỌC VIÊN (USERS)
 // ============================================================
 app.get('/api/users', (req, res) => {
     const sql = `SELECT u.*, c.name as club_name FROM users u LEFT JOIN clubs c ON u.club_id = c.id ORDER BY u.created_at DESC`;
     db.query(sql, (err, r) => res.json(r));
 });
 
-// API THÊM USER (Đã bổ sung level vào INSERT)
 app.post('/api/users', (req, res) => {
-    // 1. Lấy thêm biến 'level' từ req.body
     const { fullname, username, password, role, subject, club_id, join_date, status, note, level } = req.body; 
     
     db.query("SELECT * FROM users WHERE username = ?", [username], (err, results) => {
         if (results.length > 0) return res.json({ success: false, message: "Trùng username!" });
         
-        // 2. Thêm 'level' vào câu lệnh SQL
         const sql = "INSERT INTO users (fullname, username, password, role, subject, club_id, join_date, status, note, level) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
-        // 3. Truyền giá trị vào mảng tham số
         db.query(sql, [
             fullname, 
             username, 
@@ -107,10 +111,10 @@ app.post('/api/users', (req, res) => {
             join_date || new Date(), 
             status || 'Chính thức', 
             note || '', 
-            level || 'Đai trắng' // Mặc định Đai trắng nếu thiếu
+            level || 'Đai trắng' 
         ], (err) => {
             if (err) {
-                console.error("Lỗi thêm user:", err); // Log lỗi ra terminal để debug
+                console.error("Lỗi thêm user:", err); 
                 return res.status(500).json({ success: false, message: err.message });
             }
             res.json({ success: true });
@@ -118,9 +122,8 @@ app.post('/api/users', (req, res) => {
     });
 });
 
-// API CẬP NHẬT USER (Đã bổ sung level vào UPDATE)
 app.put('/api/users/:id', (req, res) => {
-    const { fullname, join_date, status, note, level, club_id } = req.body; // Lấy level
+    const { fullname, join_date, status, note, level, club_id } = req.body; 
     
     const sql = `UPDATE users SET fullname = ?, join_date = ?, status = ?, note = ?, level = ?, club_id = ? WHERE id = ?`;
     
@@ -173,12 +176,9 @@ app.get('/api/scores', (req, res) => { const sql = `SELECT s.*, u.fullname, c.na
 app.post('/api/scores', (req, res) => { const { userId, subject, theory, practice, date } = req.body; db.query("INSERT INTO scores (user_id, subject, score_theory, score_practice, exam_date) VALUES (?,?,?,?,?)", [userId, subject, theory, practice, date], (e)=>res.json({success:!e})); });
 app.delete('/api/scores/:id', (req, res) => { db.query("DELETE FROM scores WHERE id=?", [req.params.id], (e)=>res.json({success:!e})); });
 
-
 // ============================================================
 // 5. API GIẢI ĐẤU (TOURNAMENT)
 // ============================================================
-
-// A. Lấy Sơ đồ thi đấu
 app.get('/api/tournament/bracket', (req, res) => {
     db.query("SELECT * FROM matches ORDER BY id ASC", (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -195,7 +195,6 @@ app.get('/api/tournament/bracket', (req, res) => {
     });
 });
 
-// B. Lấy chi tiết 1 trận đấu
 app.get('/api/tournament/match/:id', (req, res) => {
     db.query("SELECT * FROM matches WHERE id = ?", [req.params.id], (err, result) => {
         if (err || result.length === 0) return res.status(404).send("Not Found");
@@ -203,7 +202,6 @@ app.get('/api/tournament/match/:id', (req, res) => {
     });
 });
 
-// C. Bắt đầu giải đấu (Setup - TẠO TOÀN BỘ CÂY SƠ ĐỒ)
 app.post('/api/tournament/start', upload.single('file'), (req, res) => {
     if (!req.file) return res.json({ success: false, message: "Chưa chọn file!" });
 
@@ -268,7 +266,6 @@ app.post('/api/tournament/start', upload.single('file'), (req, res) => {
     }
 });
 
-// D. Lưu người thắng & Điểm số (Kết thúc trận)
 app.post('/api/tournament/winner', (req, res) => {
     const { matchId, winnerName, score1, score2 } = req.body;
     const sqlUpdate = "UPDATE matches SET winner = ?, score1 = ?, score2 = ?, status = 'finished' WHERE id = ?";
@@ -304,7 +301,6 @@ app.post('/api/tournament/winner', (req, res) => {
     });
 });
 
-// E. BẮT ĐẦU TRẬN ĐẤU - Set Active
 app.post('/api/tournament/match/start', (req, res) => {
     const { matchId } = req.body;
     db.query("UPDATE matches SET status = 'pending' WHERE status = 'active'", (err) => {
@@ -315,12 +311,10 @@ app.post('/api/tournament/match/start', (req, res) => {
     });
 });
 
-// F. Reset giải đấu
 app.post('/api/tournament/reset', (req, res) => {
     db.query("TRUNCATE TABLE matches", (err) => res.json({ success: !err }));
 });
 
-// G. Lấy trận đấu hiện tại (Active)
 app.get('/api/tournament/current', (req, res) => {
     db.query("SELECT * FROM matches WHERE status = 'active' LIMIT 1", (err, result) => {
         if (result && result.length > 0) res.json({ currentMatch: result[0] });
@@ -328,7 +322,6 @@ app.get('/api/tournament/current', (req, res) => {
     });
 });
 
-// H. Bảng tổng sắp huy chương
 app.get('/api/tournament/medals', (req, res) => {
     const sql = `
         SELECT team1 as name, COUNT(*) as gold FROM matches WHERE winner = p1 AND team1 != '' GROUP BY team1
@@ -345,6 +338,7 @@ app.get('/api/tournament/medals', (req, res) => {
         res.json(Object.keys(medals).map(k => ({ name: k, ...medals[k] })));
     });
 });
+
 // ============================================================
 // 6. API ĐIỂM DANH (ATTENDANCE)
 // ============================================================
@@ -382,7 +376,7 @@ app.post('/api/attendance', (req, res) => {
         res.json({ success: true });
     });
 });
-// Lấy lịch sử điểm danh của 1 học viên cụ thể
+
 app.get('/api/users/:id/attendance', (req, res) => {
     const sql = `SELECT date, status, note FROM attendance WHERE user_id = ? ORDER BY date DESC`;
     db.query(sql, [req.params.id], (err, results) => {
@@ -390,9 +384,10 @@ app.get('/api/users/:id/attendance', (req, res) => {
         res.json(results);
     });
 });
+
 // ============================================================
 // KHỞI CHẠY
 // ============================================================
 app.listen(PORT, () => {
-    console.log(`🚀 Server đang chạy tại https://nangkhieutriduc.com:${PORT}`);
+    console.log(`🚀 Server đang chạy tại cổng ${PORT}`);
 });
