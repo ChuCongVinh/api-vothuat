@@ -36,9 +36,13 @@ const db = mysql.createPool({
     queueLimit: 0
 });
 
-db.connect((err) => {
-    if (err) { console.error('❌ Lỗi MySQL:', err); return; }
-    console.log('✅ Đã kết nối MySQL thành công!');
+db.getConnection((err, connection) => {
+    if (err) {
+        console.error('Lỗi kết nối MySQL:', err);
+        return;
+    }
+    console.log('✅ Đã kết nối MySQL thành công bằng Pool!');
+    connection.release(); // Trả kết nối lại cho hồ chứa để người khác dùng
 });
 
 // ============================================================
