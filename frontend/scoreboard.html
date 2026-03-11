@@ -105,9 +105,11 @@
             <div class="match-phase" id="phaseDisplay">ROUND 1</div>
             <input type="text" id="catInput" value="KUMITE" style="text-align:center; border:none; background:transparent; color:#888; font-weight:bold; width:100%; margin-bottom:5px;" oninput="broadcastInfo()">
             <div class="timer-text" id="timerDisplay" onclick="toggleTimer()">03:00</div>
-            <div style="margin-top:10px;">
+            
+            <div style="margin-top:10px; display: flex; gap: 5px; justify-content: center;">
                 <button onclick="toggleTimer()" style="padding:10px 30px; background:#198754; border:none; color:white; font-weight:bold; border-radius:5px; cursor:pointer;" id="btnTimer">START</button>
-                <button onclick="resetTimer()" style="padding:10px; background:#6c757d; border:none; color:white; border-radius:5px; cursor:pointer; margin-left:5px;"><i class="fa-solid fa-rotate-right"></i></button>
+                <button onclick="resetTimer()" style="padding:10px; background:#6c757d; border:none; color:white; border-radius:5px; cursor:pointer;" title="Reset thời gian"><i class="fa-solid fa-rotate-right"></i></button>
+                <button onclick="editTimer()" style="padding:10px; background:#ffc107; border:none; color:black; font-weight:bold; border-radius:5px; cursor:pointer;" title="Chỉnh sửa thời gian"><i class="fa-solid fa-pen"></i></button>
             </div>
         </div>
 
@@ -165,15 +167,16 @@
 
     <script>
         // STATE
-        let gameState = { akaScore: 0, aoScore: 0, akaPen: 0, aoPen: 0, senshu: null };
+        let defaultTime = 180; // Mặc định là 3 phút (180 giây)
         let timer = { time: 180, interval: null, isRunning: false };
+        let gameState = { akaScore: 0, aoScore: 0, akaPen: 0, aoPen: 0, senshu: null };
         let isMatchEnded = false;
 
         const channel = new BroadcastChannel('karate_channel');
         const urlParams = new URLSearchParams(window.location.search);
         const matchId = urlParams.get('matchId');
 
-        // BỎ LOCAL - CHUYỂN TOÀN BỘ API VỀ DOMAIN CHÍNH THỨC
+        // CHUYỂN API VỀ DOMAIN CHÍNH THỨC
         const API_BASE = 'https://nangkhieutriduc.com/api';
 
         async function init() {
@@ -294,12 +297,54 @@
                 }, 1000);
             } else clearInterval(timer.interval);
         }
-        function resetTimer() { timer.isRunning = false; clearInterval(timer.interval); timer.time = 180; renderTimer(); document.getElementById('btnTimer').innerText = "START"; document.getElementById('btnTimer').style.background = "#198754"; }
+
+        // --- CÁC HÀM LIÊN QUAN TỚI ĐỒNG HỒ ĐƯỢC CHỈNH SỬA ---
+        function editTimer() {
+            if (timer.isRunning) {
+                alert("Vui lòng dừng (STOP) đồng hồ trước khi sửa giờ!");
+                return;
+            }
+            let currentStr = document.getElementById('timerDisplay').innerText;
+            let input = prompt("Nhập thời gian đếm ngược (phút:giây) - Ví dụ: 02:00", currentStr);
+            
+            if (input) {
+                let parts = input.split(':');
+                if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                    let mins = parseInt(parts[0]);
+                    let secs = parseInt(parts[1]);
+                    let totalSeconds = (mins * 60) + secs;
+                    
+                    defaultTime = totalSeconds; // Lưu lại làm mốc mặc định mới
+                    timer.time = totalSeconds;
+                    renderTimer();
+                } else {
+                    alert("Định dạng không hợp lệ. Vui lòng nhập theo mẫu mm:ss (VD: 02:00)");
+                }
+            }
+        }
+
+        function resetTimer() { 
+            timer.isRunning = false; 
+            clearInterval(timer.interval); 
+            timer.time = defaultTime; // Lấy mốc thời gian đã được set (2 phút hoặc 3 phút)
+            renderTimer(); 
+            document.getElementById('btnTimer').innerText = "START"; 
+            document.getElementById('btnTimer').style.background = "#198754"; 
+        }
+
         function renderTimer() {
             let m = Math.floor(timer.time / 60).toString().padStart(2, '0'); let s = (timer.time % 60).toString().padStart(2, '0');
             document.getElementById('timerDisplay').innerText = `${m}:${s}`; broadcastTimer(`${m}:${s}`, timer.time < 15);
         }
-        function resetMatchData() { if(confirm("Reset điểm?")) { isMatchEnded = false; gameState = { akaScore: 0, aoScore: 0, akaPen: 0, aoPen: 0, senshu: null }; resetTimer(); renderUI(); } }
+
+        function resetMatchData() { 
+            if(confirm("Reset điểm?")) { 
+                isMatchEnded = false; 
+                gameState = { akaScore: 0, aoScore: 0, akaPen: 0, aoPen: 0, senshu: null }; 
+                resetTimer(); 
+                renderUI(); 
+            } 
+        }
 
         function checkTimeUpWinner() {
             if (gameState.akaScore > gameState.aoScore) {
