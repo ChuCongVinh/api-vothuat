@@ -150,8 +150,18 @@ app.delete('/api/users/:id', (req, res) => {
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     db.query("SELECT * FROM users WHERE username = ? AND password = ?", [username, password], (err, results) => {
-        if (results.length > 0) res.json({ success: true, role: results[0].role, fullname: results[0].fullname });
-        else res.status(401).json({ success: false });
+        // Lưới bắt lỗi: Nếu DB có vấn đề, báo lỗi ngay chứ không để sập server
+        if (err) {
+            console.error("Lỗi truy vấn đăng nhập:", err);
+            return res.status(500).json({ success: false, message: "Lỗi kết nối máy chủ" });
+        }
+        
+        // Chỉ đếm length khi chắc chắn results có tồn tại
+        if (results && results.length > 0) {
+            res.json({ success: true, role: results[0].role, fullname: results[0].fullname });
+        } else {
+            res.status(401).json({ success: false, message: "Sai tài khoản hoặc mật khẩu" });
+        }
     });
 });
 
