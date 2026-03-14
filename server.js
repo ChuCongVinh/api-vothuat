@@ -457,10 +457,33 @@ app.post('/api/forgot-password', (req, res) => {
                 formData.append('fullname', user.fullname);
 
                 // QUAN TRỌNG: Dùng http (không có s) để vượt qua lỗi SSL đang bị "Not secure"
-                const response = await fetch('http://nangkhieutriduc.com/send_mail.php', {
-                    method: 'POST',
-                    body: formData // Không cần thêm headers 'x-api-key' vì PHP đã dùng $_POST['secret']
-                });
+                // GỌI SANG FILE PHP ĐỂ NHỜ GỬI MAIL
+try {
+    const formData = new URLSearchParams();
+    formData.append('secret', 'TriDucKarate@2026'); // Phải khớp 100% với PHP
+    formData.append('email', email);
+    formData.append('newpass', newTempPassword);
+    formData.append('username', user.username);
+    formData.append('fullname', user.fullname);
+
+    // Dùng http (không có s) vì SSL của bạn chưa xanh (Not secure)
+    const response = await fetch('http://nangkhieutriduc.com/send_mail.php', {
+        method: 'POST',
+        body: formData // Node.js sẽ tự động set Content-Type chuẩn cho PHP
+    });
+    
+    const result = await response.json();
+    if(result.success) {
+        res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email của bạn!" });
+    } else {
+        // Nếu PHP báo "Lỗi bảo mật", ta in ra để debug
+        console.log("PHP trả về lỗi:", result.message);
+        res.json({ success: false, message: "Máy chủ Mail từ chối: " + result.message });
+    }
+} catch (error) {
+    console.error("Lỗi kết nối:", error);
+    res.json({ success: false, message: "Không thể kết nối đến máy chủ Mail." });
+}
                 
                 const result = await response.json();
                 
