@@ -447,26 +447,28 @@ app.post('/api/forgot-password', (req, res) => {
         db.query("UPDATE users SET password = ? WHERE id = ?", [newTempPassword, user.id], async (err) => {
             if (err) return res.json({ success: false, message: "Lỗi hệ thống" });
 
-            // GỌI SANG FILE PHP ĐỂ NHỜ GỬI MAIL
             try {
-                // Sử dụng hàm fetch có sẵn của Node.js
+                // Tạo dữ liệu dạng Form để PHP đọc được bằng $_POST
                 const formData = new URLSearchParams();
-                formData.append('secret', 'TriDucKarate@2026');
+                formData.append('secret', 'TriDucKarate@2026'); // Khóa khớp với file PHP
                 formData.append('email', email);
                 formData.append('newpass', newTempPassword);
                 formData.append('username', user.username);
                 formData.append('fullname', user.fullname);
 
-                const response = await fetch('https://nangkhieutriduc.com/send_mail.php', {
+                // QUAN TRỌNG: Dùng http (không có s) để vượt qua lỗi SSL đang bị "Not secure"
+                const response = await fetch('http://nangkhieutriduc.com/send_mail.php', {
                     method: 'POST',
-                    body: formData
+                    body: formData // Không cần thêm headers 'x-api-key' vì PHP đã dùng $_POST['secret']
                 });
                 
                 const result = await response.json();
+                
                 if(result.success) {
                     res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email của bạn!" });
                 } else {
-                    res.json({ success: false, message: "Lỗi từ máy chủ gửi mail." });
+                    console.log("PHP báo lỗi:", result.message);
+                    res.json({ success: false, message: result.message || "Máy chủ từ chối gửi mail." });
                 }
             } catch (error) {
                 console.error("Lỗi gọi PHP:", error);

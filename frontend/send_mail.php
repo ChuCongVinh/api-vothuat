@@ -1,6 +1,6 @@
 <?php
 header('Access-Control-Allow-Origin: *');
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=UTF-8'); // Thêm charset ở đây
 
 // Chìa khóa bảo mật để không ai gửi bậy bạ
 $secret = "TriDucKarate@2026";
