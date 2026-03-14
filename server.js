@@ -25,12 +25,20 @@ const db_config = {
 };
 const nodemailer = require('nodemailer');
 
-// Cấu hình Email gửi đi (Bạn cần dùng 1 tài khoản Gmail và tạo "Mật khẩu ứng dụng" cho nó)
+
+// Cấu hình Email gửi đi (ĐÃ NÂNG CẤP ĐỂ CHỐNG LỖI IPv6 TRÊN RENDER)
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
-        user: 'nangkhieutriduc@gmail.com', // Thay bằng Gmail của CLB
-        pass: 'qque nshc lhip dskv' // Thay bằng Mật khẩu ứng dụng (App Password)
+        user: 'nangkhieutriduc@gmail.com', // Giữ nguyên Gmail của bạn
+        pass: 'qque nshc lhip dskv'   // THAY BẰNG MẬT KHẨU ỨNG DỤNG BẠN VỪA LẤY
+    },
+    // CHIÊU BÀI Ở ĐÂY: Ép hệ thống dùng IPv4 để không bao giờ bị lỗi ENETUNREACH
+    family: 4,
+    tls: {
+        rejectUnauthorized: false
     }
 });
 let db;
