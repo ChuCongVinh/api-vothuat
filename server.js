@@ -451,34 +451,41 @@ app.put('/api/users/:id/contact', (req, res) => {
 // Gửi email Quên mật khẩu
 app.post('/api/forgot-password', (req, res) => {
     const { email } = req.body;
-    db.query("SELECT id, username, fullname FROM users WHERE email = ?", [email], (err, results) => {
+    db.query("SELECT id, username, fullname FROM users WHERE email = ?", [email], async (err, results) => {
         if (err || results.length === 0) return res.json({ success: false, message: "Email không tồn tại trong hệ thống!" });
         
         const user = results[0];
-        const newTempPassword = Math.random().toString(36).slice(-8); // Tạo mật khẩu ngẫu nhiên 8 ký tự
+        const newTempPassword = Math.random().toString(36).slice(-8); 
 
         // Cập nhật mk mới vào DB
-        db.query("UPDATE users SET password = ? WHERE id = ?", [newTempPassword, user.id], (err) => {
+        db.query("UPDATE users SET password = ? WHERE id = ?", [newTempPassword, user.id], async (err) => {
             if (err) return res.json({ success: false, message: "Lỗi hệ thống" });
 
-            // Gửi email
-            const mailOptions = {
-                from: 'CLB Karate Trí Đức',
-                to: email,
-                subject: 'Khôi phục mật khẩu - CLB Karate Trí Đức',
-                html: `<h3>Xin chào ${user.fullname},</h3>
-                       <p>Tài khoản của bạn là: <b>${user.username}</b></p>
-                       <p>Mật khẩu mới của bạn là: <b style="color:red; font-size:18px;">${newTempPassword}</b></p>
-                       <p>Vui lòng đăng nhập và đổi lại mật khẩu ngay nhé!</p>`
-            };
+            // GỌI SANG FILE PHP ĐỂ NHỜ GỬI MAIL
+            try {
+                // Sử dụng hàm fetch có sẵn của Node.js
+                const formData = new URLSearchParams();
+                formData.append('secret', 'TriDucKarate@2026');
+                formData.append('email', email);
+                formData.append('newpass', newTempPassword);
+                formData.append('username', user.username);
+                formData.append('fullname', user.fullname);
 
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.error("Lỗi gửi mail:", error);
-                    return res.json({ success: false, message: "Không thể gửi email, vui lòng thử lại sau." });
+                const response = await fetch('https://nangkhieutriduc.com/send_mail.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                if(result.success) {
+                    res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email của bạn!" });
+                } else {
+                    res.json({ success: false, message: "Lỗi từ máy chủ gửi mail." });
                 }
-                res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email của bạn!" });
-            });
+            } catch (error) {
+                console.error("Lỗi gọi PHP:", error);
+                res.json({ success: false, message: "Không thể kết nối đến máy chủ Mail." });
+            }
         });
     });
 });
