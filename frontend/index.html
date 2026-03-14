@@ -212,32 +212,17 @@
 
     <script>
         // --- 1. XỬ LÝ MODAL ---
-        function openRoleModal() {
-            document.getElementById('roleModal').style.display = 'block';
-        }
+        function openRoleModal() { document.getElementById('roleModal').style.display = 'block'; }
+        function closeRoleModal() { document.getElementById('roleModal').style.display = 'none'; }
+        function selectRole(role) { window.location.href = `login.html?role=${role}`; }
 
-        function closeRoleModal() {
-            document.getElementById('roleModal').style.display = 'none';
-        }
-
-        function selectRole(role) {
-            window.location.href = `login.html?role=${role}`;
-        }
-
-        // Đóng modal khi click ra ngoài vùng trắng
         window.onclick = function(event) {
             let roleModal = document.getElementById('roleModal');
             let regModal = document.getElementById('registerModal');
-            
-            if (event.target == roleModal) {
-                closeRoleModal();
-            }
+            if (event.target == roleModal) closeRoleModal();
             if (event.target == regModal) {
-                if(typeof closeModal === 'function') {
-                    closeModal();
-                } else {
-                    regModal.style.display = "none";
-                }
+                if(typeof closeModal === 'function') closeModal();
+                else regModal.style.display = "none";
             }
         }
 
@@ -246,24 +231,33 @@
             // Check LocalStorage xem đã đăng nhập chưa
             const isLoggedIn = localStorage.getItem('isLoggedIn');
             const username = localStorage.getItem('currentUser');
+            const userId = localStorage.getItem('userId'); // Lấy thêm ID
             const role = localStorage.getItem('role');
-
             const menuList = document.getElementById('menuList');
 
             if (isLoggedIn === 'true' && username) {
-                // Nếu đã đăng nhập: Tìm và ẩn nút "Đăng nhập"
+                // Ẩn nút "Đăng nhập"
                 const links = menuList.getElementsByTagName('a');
                 for (let i = 0; i < links.length; i++) {
                     if (links[i].innerText.includes("Đăng nhập") || links[i].getAttribute('onclick')?.includes('openRoleModal')) {
-                        links[i].parentElement.style.display = 'none'; // Ẩn nút đăng nhập
+                        links[i].parentElement.style.display = 'none'; 
                     }
                 }
 
-                // Thêm dòng "Xin chào" vào menu
+                // --- ĐIỂM NÂNG CẤP: GẮN LINK SANG PROFILE.HTML ---
                 const li = document.createElement('li');
+                li.style.display = "flex";
+                li.style.alignItems = "center";
+                li.style.gap = "10px";
+                
+                // Nút Trang cá nhân
+                let profileLink = role === 'admin' ? 'admin.html' : 'profile.html'; // Admin vào trang Quản trị, User vào Trang Cá nhân
+                
                 li.innerHTML = `
-                    <a href="#" style="color: #0d6efd; font-weight: bold;">👋 Xin chào, ${username}</a>
-                    <a href="#" onclick="handleLogout()" style="color: red; font-size: 0.9em;">(Đăng xuất)</a>
+                    <a href="${profileLink}" style="color: #0d6efd; font-weight: bold; background: #e9ecef; padding: 5px 15px; border-radius: 20px;">
+                        <i class="fa-solid fa-user-ninja"></i> Xin chào, ${username}
+                    </a>
+                    <a href="#" onclick="handleLogout()" style="color: #dc3545; font-size: 0.9em; font-weight: bold;">(Đăng xuất)</a>
                 `;
                 menuList.appendChild(li);
             }
@@ -271,14 +265,16 @@
 
         // --- 3. HÀM ĐĂNG XUẤT ---
         function handleLogout() {
-            // Xóa toàn bộ thông tin đăng nhập trong bộ nhớ
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('currentUser');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userId'); // Xóa cả ID
             localStorage.removeItem('role');
-            
             alert("Đã đăng xuất thành công!");
-            location.reload(); // Tải lại trang để cập nhật giao diện
+            location.reload(); 
         }
     </script>
+</body>
+</html>
 </body>
 </html>
