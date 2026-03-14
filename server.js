@@ -435,48 +435,39 @@ app.put('/api/users/:id/contact', (req, res) => {
 });
 
 // Gửi email Quên mật khẩu
+// Gửi email Quên mật khẩu
 app.post('/api/forgot-password', (req, res) => {
     const { email } = req.body;
-    
-    // 1. Kiểm tra email trong DB
     db.query("SELECT id, username, fullname FROM users WHERE email = ?", [email], async (err, results) => {
-        if (err) return res.status(500).json({ success: false, message: "Lỗi truy vấn Database" });
-        if (results.length === 0) return res.json({ success: false, message: "Email không tồn tại trong hệ thống!" });
+        if (err || results.length === 0) return res.json({ success: false, message: "Email không tồn tại!" });
         
         const user = results[0];
         const newTempPassword = Math.random().toString(36).slice(-8); 
 
-        // 2. Cập nhật mật khẩu tạm vào DB
         db.query("UPDATE users SET password = ? WHERE id = ?", [newTempPassword, user.id], async (err) => {
-            if (err) return res.json({ success: false, message: "Không thể cập nhật mật khẩu" });
+            if (err) return res.json({ success: false, message: "Lỗi DB" });
 
-            // 3. Gọi sang PHP gửi mail
-            // ... (đoạn db.query cập nhật password giữ nguyên)
             try {
                 const formData = new URLSearchParams();
+                formData.append('secret', 'TriDucKarate@2026'); // CHÌA KHÓA
                 formData.append('email', email);
                 formData.append('newpass', newTempPassword);
                 formData.append('username', user.username);
                 formData.append('fullname', user.fullname);
 
-                // Dùng link HTTPS chính thức của bạn
                 const phpResponse = await fetch('https://nangkhieutriduc.com/send_mail.php', {
                     method: 'POST',
-                    body: formData
+                    body: formData 
                 });
                 
-                const phpResult = await phpResponse.json();
-                
-                if(phpResult.success) {
-                    return res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email của bạn!" });
+                const result = await phpResponse.json();
+                if(result.success) {
+                    return res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email!" });
                 } else {
-                    return res.json({ success: false, message: "Lỗi: " + phpResult.message });
+                    return res.json({ success: false, message: "PHP báo: " + result.message });
                 }
             } catch (error) {
-                console.error("Lỗi kết nối PHP:", error);
-                if (!res.headersSent) {
-                    return res.json({ success: false, message: "Không thể kết nối đến máy chủ Mail." });
-                }
+                return res.json({ success: false, message: "Lỗi kết nối Mail Server" });
             }
         });
     });

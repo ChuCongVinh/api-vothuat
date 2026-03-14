@@ -2,24 +2,24 @@
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json; charset=UTF-8');
 
-// TẠM THỜI BỎ QUA KIỂM TRA BẢO MẬT ĐỂ TEST
-$to = $_POST['email'];
-$newPass = $_POST['newpass'];
-$username = $_POST['username'];
-$fullname = $_POST['fullname'];
+// LẤY DỮ LIỆU TỪ RENDER GỬI SANG
+$secret = $_POST['secret'] ?? '';
+$email = $_POST['email'] ?? '';
+$newPass = $_POST['newpass'] ?? '';
+$fullname = $_POST['fullname'] ?? '';
 
-if (!$to) {
-    die(json_encode(['success' => false, 'message' => 'Không nhận được dữ liệu POST']));
+// KIỂM TRA KHÓA (Phải khớp 100% với server.js)
+if ($secret !== "TriDucKarate@2026") {
+    die(json_encode(['success' => false, 'message' => 'Khoa khong khop: ' . $secret]));
 }
 
-$subject = "Khoi phuc mat khau - CLB Karate Tri Duc";
-$message = "<html><body><h3>Xin chao $fullname,</h3><p>Tai khoan: <b>$username</b></p><p>Mat khau moi: <b style='color:red;'>$newPass</b></p></body></html>";
+$subject = "Mat khau moi - Karate Tri Duc";
+$message = "Xin chao $fullname. Mat khau moi cua ban la: $newPass";
+$headers = "From: noreply@nangkhieutriduc.com";
 
-$headers = "MIME-Version: 1.0\r\nContent-type:text/html;charset=UTF-8\r\nFrom: CLB Karate Tri Duc <noreply@nangkhieutriduc.com>";
-
-if(mail($to, $subject, $message, $headers)) {
+if(mail($email, $subject, $message, $headers)) {
     echo json_encode(['success' => true]);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Hosting dang chan ham mail()']);
+    echo json_encode(['success' => false, 'message' => 'Hosting tu choi gui mail']);
 }
 ?>
