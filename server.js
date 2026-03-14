@@ -23,24 +23,10 @@ const db_config = {
     password: 'Chucongvinh2004@', 
     database: 'jxcjzqgbhosting_nangkhieuTriDuc'
 };
-const nodemailer = require('nodemailer');
 
 
-// Cấu hình Email gửi đi (ĐÃ NÂNG CẤP ĐỂ CHỐNG LỖI IPv6 TRÊN RENDER)
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-        user: 'nangkhieutriduc@gmail.com', // Giữ nguyên Gmail của bạn
-        pass: 'qque nshc lhip dskv'   // THAY BẰNG MẬT KHẨU ỨNG DỤNG BẠN VỪA LẤY
-    },
-    // CHIÊU BÀI Ở ĐÂY: Ép hệ thống dùng IPv4 để không bao giờ bị lỗi ENETUNREACH
-    family: 4,
-    tls: {
-        rejectUnauthorized: false
-    }
-});
+
+
 let db;
 
 function handleDisconnect() {
