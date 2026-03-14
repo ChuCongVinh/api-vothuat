@@ -451,30 +451,29 @@ app.post('/api/forgot-password', (req, res) => {
             if (err) return res.json({ success: false, message: "Không thể cập nhật mật khẩu" });
 
             // 3. Gọi sang PHP gửi mail
+            // ... (đoạn db.query cập nhật password giữ nguyên)
             try {
                 const formData = new URLSearchParams();
-                formData.append('secret', 'TriDucKarate@2026'); 
                 formData.append('email', email);
                 formData.append('newpass', newTempPassword);
                 formData.append('username', user.username);
                 formData.append('fullname', user.fullname);
 
-                // Dùng http để bypass lỗi SSL Not Secure
-                const phpResponse = await fetch('http://nangkhieutriduc.com/send_mail.php', {
-    method: 'POST',
-    body: formData // Node.js tự biết đây là Form và sẽ tự set Header chuẩn cho bạn
-});
+                // Dùng link HTTPS chính thức của bạn
+                const phpResponse = await fetch('https://nangkhieutriduc.com/send_mail.php', {
+                    method: 'POST',
+                    body: formData
+                });
                 
                 const phpResult = await phpResponse.json();
                 
                 if(phpResult.success) {
                     return res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email của bạn!" });
                 } else {
-                    return res.json({ success: false, message: "PHP báo lỗi: " + phpResult.message });
+                    return res.json({ success: false, message: "Lỗi: " + phpResult.message });
                 }
             } catch (error) {
                 console.error("Lỗi kết nối PHP:", error);
-                // Đảm bảo chỉ gửi 1 response duy nhất ở đây
                 if (!res.headersSent) {
                     return res.json({ success: false, message: "Không thể kết nối đến máy chủ Mail." });
                 }
