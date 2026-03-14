@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Karate Control - MANUAL MODE (Dự phòng)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700;900&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root { --aka-color: #dc3545; --ao-color: #0d6efd; --bg-color: #ffe6e6; /* Màu nền hơi hồng để phân biệt với bản chính */ }
+        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; height: 100vh; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; }
+
+        /* HEADER & NAV */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; background: #fff; padding: 10px 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .back-btn { text-decoration: none; color: #dc3545; font-weight: bold; font-size: 16px; display: flex; align-items: center; gap: 5px; }
+        .mode-badge { background: #dc3545; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; animation: blink 2s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .scoreboard-header { display: flex; justify-content: space-between; align-items: flex-start; text-align: center; margin-bottom: 10px; position: relative; z-index: 10; padding-top: 10px;}
+        .competitor-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        
+        /* CÁC Ô NHẬP LIỆU CHẾ ĐỘ THỦ CÔNG CÓ VIỀN NHẸ ĐỂ DỄ THẤY */
+        .comp-name { font-size: 1.8rem; font-weight: 800; text-transform: uppercase; color: #333; margin-bottom: 2px; width: 80%; border: 2px dashed #ccc; border-radius: 5px; background: white; text-align: center; padding: 5px; transition: 0.3s; }
+        .comp-name:focus { border-color: #333; outline: none; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        
+        .comp-team { font-size: 1rem; color: #555; font-style: italic; margin-bottom: 10px; width: 80%; border: 1px dashed #ccc; border-radius: 5px; background: white; text-align: center; padding: 5px; }
+        .comp-team:focus { border-color: #333; outline: none; }
+
+        .senshu-container { display: flex; flex-direction: row; align-items: center; gap: 10px; margin-bottom: 10px; opacity: 0.2; transition: opacity 0.2s ease-in; filter: grayscale(100%); cursor: pointer; padding: 5px 10px; border-radius: 10px; background: rgba(0,0,0,0.05); }
+        .senshu-active { opacity: 1; filter: grayscale(0%); transform: scale(1.05); background: rgba(255,255,255,0.5); }
+        .senshu-card { width: 40px; height: 40px; border-radius: 8px; position: relative; border: 2px solid #ccc; background: #e0e0e0; }
+        .senshu-card::after { content: 'S'; position: absolute; bottom: 0px; right: 4px; font-size: 1rem; font-weight: 900; color: #888; font-family: sans-serif; }
+        .senshu-text { font-weight: 900; color: #777; font-size: 1.2rem; }
+        .senshu-active .senshu-card.aka-card { background: linear-gradient(135deg, #ff4d4d, #dc3545); border-color: #a71d2a; box-shadow: 0 0 10px rgba(220, 53, 69, 0.5); }
+        .senshu-active .senshu-card.ao-card { background: linear-gradient(135deg, #4da6ff, #0d6efd); border-color: #0a58ca; box-shadow: 0 0 10px rgba(13, 110, 253, 0.5); }
+        .senshu-active .senshu-card::after { color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+        .senshu-active .senshu-text { color: #333; }
+
+        .score-big { font-size: 9rem; font-weight: 900; line-height: 1; margin: 0; text-shadow: 4px 4px 0 rgba(0,0,0,0.1); cursor: pointer; user-select: none; }
+        .aka-text { color: var(--aka-color); } .ao-text { color: var(--ao-color); }
+
+        .penalty-dots { display: flex; gap: 5px; justify-content: center; margin-top: 5px; }
+        .dot { width: 25px; height: 25px; background: #ddd; border-radius: 4px; border: 1px solid #999; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; color: #777; transition: 0.2s; }
+        .dot-active { background: #333; border-color: #000; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .dot-hansoku { background: red; color: white; border-color: darkred; }
+
+        .timer-wrapper { text-align: center; width: 300px; padding-top: 10px; display: flex; flex-direction: column; align-items: center; }
+        .timer-text { font-size: 5rem; font-family: 'Orbitron', sans-serif; font-weight: 700; color: #222; cursor: pointer; border: 2px solid #ddd; border-radius: 10px; padding: 0 20px; background: white; }
+        
+        .match-phase-input { font-family: 'Orbitron', sans-serif; color: #d4af37; font-weight: 900; font-size: 1.5rem; margin-bottom: 5px; text-transform: uppercase; text-align: center; border: 1px dashed #ccc; background: white; border-radius: 5px; padding: 5px; width: 90%; }
+        .cat-input { text-align:center; border: 1px dashed #ccc; background:white; color:#888; font-weight:bold; width:90%; margin-bottom:5px; padding: 5px; border-radius: 5px; }
+
+        .controls-wrapper { display: flex; gap: 20px; flex: 1; z-index: 10; margin-top: 10px; }
+        .control-panel { flex: 1; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; }
+        .aka-panel { border-top: 6px solid var(--aka-color); } .ao-panel { border-top: 6px solid var(--ao-color); }
+        
+        .points-row { display: flex; gap: 8px; }
+        .btn-point { flex: 1; padding: 15px 0; border: none; border-radius: 8px; color: white; cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: 0.1s; }
+        .btn-point:active { transform: scale(0.95); }
+        .btn-point span:first-child { font-size: 1.5rem; font-weight: 900; }
+        .btn-point span:last-child { font-size: 0.8rem; font-weight: normal; text-transform: uppercase; opacity: 0.9; }
+
+        .btn-aka { background: var(--aka-color); box-shadow: 0 4px 0 #a71d2a; }
+        .btn-ao { background: var(--ao-color); box-shadow: 0 4px 0 #0a58ca; }
+        .btn-minus { width: 100%; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        .footer-controls { display: flex; gap: 10px; justify-content: center; margin-top: 15px; z-index: 10; }
+        .btn-foot { padding: 12px 20px; font-weight: bold; border-radius: 5px; border: none; cursor: pointer; font-size: 1rem; }
+        .btn-green { background: #28a745; color: white; }
+
+        /* MODAL KẾT QUẢ */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-box { background: white; padding: 30px; border-radius: 15px; text-align: center; width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; color: #333; }
+        .modal-success-icon { font-size: 4rem; color: #28a745; margin: 10px 0; }
+        .modal-result { font-size: 2rem; font-weight: 900; color: #000; margin: 10px 0; }
+        .modal-reason { color: #666; font-style: italic; font-size: 1rem; margin-bottom: 20px; }
+        
+        .btn-next-match {
+            background: linear-gradient(135deg, #198754, #146c43);
+            color: white; border: none; padding: 15px 40px;
+            border-radius: 30px; font-size: 1.2rem; font-weight: bold;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(25, 135, 84, 0.4);
+            transition: transform 0.2s;
+        }
+        .btn-next-match:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <a href="tournament_hub.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Về Hub Giải đấu</a>
+        <div class="mode-badge"><i class="fa-solid fa-triangle-exclamation"></i> CHẾ ĐỘ THỦ CÔNG (OFFLINE)</div>
+        <button onclick="broadcastInfo()" class="back-btn" style="background:none; border:none; cursor:pointer; color:#198754;"><i class="fa-solid fa-satellite-dish"></i> Đồng bộ lên Tivi</button>
+    </div>
+
+    <div class="scoreboard-header">
+        <div class="competitor-col">
+            <input type="text" class="comp-name" id="nameAka" value="TÊN VĐV ĐỎ" placeholder="Nhập tên VĐV Đỏ" oninput="broadcastInfo()" onclick="this.select()">
+            <input type="text" class="comp-team" id="teamAka" value="ĐOÀN VĐV ĐỎ" placeholder="Nhập tên Đoàn" oninput="broadcastInfo()" onclick="this.select()">
+            <div id="senshuContainerAka" class="senshu-container" onclick="toggleSenshu('aka')">
+                <div class="senshu-card aka-card"></div><div class="senshu-text">(SENSHU)</div>
+            </div>
+            <div class="score-big aka-text" id="scoreAka" onclick="updateScore('aka', 1)">0</div>
+            <div class="penalty-dots" id="dotsAka">
+                <div class="dot" onclick="setPenalty('aka', 1)">1</div><div class="dot" onclick="setPenalty('aka', 2)">2</div>
+                <div class="dot" onclick="setPenalty('aka', 3)">3</div><div class="dot" onclick="setPenalty('aka', 4)">HC</div><div class="dot" onclick="setPenalty('aka', 5)">H</div>
+            </div>
+        </div>
+
+        <div class="timer-wrapper">
+            <input type="text" id="phaseDisplay" class="match-phase-input" value="GIAO HỮU" placeholder="Nhập Vòng đấu" oninput="broadcastInfo()" onclick="this.select()">
+            <input type="text" id="catInput" class="cat-input" value="KUMITE TỰ DO" placeholder="Nhập Hạng cân/Nội dung" oninput="broadcastInfo()" onclick="this.select()">
+            <div class="timer-text" id="timerDisplay" onclick="toggleTimer()">03:00</div>
+            
+            <div style="margin-top:10px; display: flex; gap: 5px; justify-content: center;">
+                <button onclick="toggleTimer()" style="padding:10px 30px; background:#198754; border:none; color:white; font-weight:bold; border-radius:5px; cursor:pointer;" id="btnTimer">START</button>
+                <button onclick="resetTimer()" style="padding:10px; background:#6c757d; border:none; color:white; border-radius:5px; cursor:pointer;" title="Reset thời gian"><i class="fa-solid fa-rotate-right"></i></button>
+                <button onclick="editTimer()" style="padding:10px; background:#ffc107; border:none; color:black; font-weight:bold; border-radius:5px; cursor:pointer;" title="Chỉnh sửa thời gian"><i class="fa-solid fa-pen"></i></button>
+            </div>
+        </div>
+
+        <div class="competitor-col">
+            <input type="text" class="comp-name" id="nameAo" value="TÊN VĐV XANH" placeholder="Nhập tên VĐV Xanh" oninput="broadcastInfo()" onclick="this.select()">
+            <input type="text" class="comp-team" id="teamAo" value="ĐOÀN VĐV XANH" placeholder="Nhập tên Đoàn" oninput="broadcastInfo()" onclick="this.select()">
+            <div id="senshuContainerAo" class="senshu-container" onclick="toggleSenshu('ao')">
+                <div class="senshu-label" style="margin-right:10px; font-weight:bold; color:#aaa;">SENSHU</div><div class="senshu-card ao-card"></div>
+            </div>
+            <div class="score-big ao-text" id="scoreAo" onclick="updateScore('ao', 1)">0</div>
+            <div class="penalty-dots" id="dotsAo">
+                <div class="dot" onclick="setPenalty('ao', 1)">1</div><div class="dot" onclick="setPenalty('ao', 2)">2</div>
+                <div class="dot" onclick="setPenalty('ao', 3)">3</div><div class="dot" onclick="setPenalty('ao', 4)">HC</div><div class="dot" onclick="setPenalty('ao', 5)">H</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls-wrapper">
+        <div class="control-panel aka-panel">
+            <div class="points-row">
+                <button class="btn-point btn-aka" onclick="updateScore('aka', 1)"><span>+1</span><span>Yuko</span></button>
+                <button class="btn-point btn-aka" onclick="updateScore('aka', 2)"><span>+2</span><span>Waza-ari</span></button>
+                <button class="btn-point btn-aka" onclick="updateScore('aka', 3)"><span>+3</span><span>Ippon</span></button>
+            </div>
+            <button class="btn-minus" onclick="updateScore('aka', -1)">-1 Điểm</button>
+        </div>
+        <div class="control-panel ao-panel">
+            <div class="points-row">
+                <button class="btn-point btn-ao" onclick="updateScore('ao', 1)"><span>+1</span><span>Yuko</span></button>
+                <button class="btn-point btn-ao" onclick="updateScore('ao', 2)"><span>+2</span><span>Waza-ari</span></button>
+                <button class="btn-point btn-ao" onclick="updateScore('ao', 3)"><span>+3</span><span>Ippon</span></button>
+            </div>
+            <button class="btn-minus" onclick="updateScore('ao', -1)">-1 Điểm</button>
+        </div>
+    </div>
+
+    <div class="footer-controls">
+        <button class="btn-foot btn-green" style="background:#d63384" onclick="endMatchReport()">
+            <i class="fa-solid fa-flag-checkered"></i> KẾT THÚC TRẬN ĐẤU
+        </button>
+        <button class="btn-foot" style="background:#6c757d; color:white" onclick="clearBoardCompletely()">
+            <i class="fa-solid fa-trash-can"></i> LÀM SẠCH BẢNG
+        </button>
+    </div>
+
+    <div id="resultModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-success-icon"><i class="fa-solid fa-trophy"></i></div>
+            <div class="modal-title">KẾT THÚC TRẬN (THỦ CÔNG)</div>
+            <div class="modal-result" id="winResult"></div>
+            <div class="modal-reason" id="winReason"></div>
+            <button class="btn-next-match" onclick="resetMatchData(true)"><i class="fa-solid fa-rotate-right"></i> BẮT ĐẦU TRẬN MỚI</button>
+        </div>
+    </div>
+
+    <script>
+        // STATE ĐỘC LẬP
+        let defaultTime = 180; 
+        let timer = { time: 180, interval: null, isRunning: false };
+        let gameState = { akaScore: 0, aoScore: 0, akaPen: 0, aoPen: 0, senshu: null };
+        let isMatchEnded = false;
+
+        const channel = new BroadcastChannel('karate_channel');
+
+        // Bỏ hàm tải API. Chỉ phát thông tin khởi tạo ngay khi mở trang.
+        function initManual() {
+            broadcastInfo(); 
+            broadcastState();
+            renderTimer();
+        }
+
+        function broadcastInfo() {
+            channel.postMessage({ 
+                type: 'UPDATE_INFO', 
+                p1: document.getElementById('nameAka').value || "AKA", 
+                p2: document.getElementById('nameAo').value || "AO", 
+                team1: document.getElementById('teamAka').value, 
+                team2: document.getElementById('teamAo').value, 
+                phase: document.getElementById('phaseDisplay').value || "GIAO HỮU", 
+                category: document.getElementById('catInput').value || "KUMITE"
+            });
+        }
+        function broadcastState() { channel.postMessage({ type: 'UPDATE_STATE', ...gameState }); }
+        function broadcastTimer(display, warn) { channel.postMessage({ type: 'UPDATE_TIMER', time: display, isWarning: warn }); }
+        
+        function broadcastAction(side, action, penaltyText = null) { 
+            channel.postMessage({ type: 'SHOW_ACTION', side, action, text: penaltyText }); 
+        }
+
+        function updateScore(side, points) {
+            if (isMatchEnded) return;
+            if (side === 'aka') gameState.akaScore = Math.max(0, gameState.akaScore + points);
+            else gameState.aoScore = Math.max(0, gameState.aoScore + points);
+            
+            if (points > 0) broadcastAction(side, points);
+            if (points > 0 && gameState.senshu === null && gameState.akaScore + gameState.aoScore === points) {
+                gameState.senshu = side; broadcastAction(side, 'senshu');
+            }
+            renderUI();
+            
+            // Cách biệt 8 điểm
+            let diff = Math.abs(gameState.akaScore - gameState.aoScore);
+            if (diff >= 8) {
+                let winner = gameState.akaScore > gameState.aoScore ? 'aka' : 'ao';
+                declareWinner(winner, "CÁCH BIỆT 8 ĐIỂM");
+            }
+        }
+
+        function setPenalty(side, level) {
+            if (isMatchEnded) return;
+            const penaltyNames = {1: '1', 2: '2', 3: '3', 4: 'HC', 5: 'H'};
+            let currentPenaltyName = penaltyNames[level];
+
+            if(side === 'aka') gameState.akaPen = (gameState.akaPen === level) ? 0 : level;
+            else gameState.aoPen = (gameState.aoPen === level) ? 0 : level;
+            
+            if(gameState.akaPen > 0 || gameState.aoPen > 0) {
+                broadcastAction(side, 4, currentPenaltyName);
+            }
+            renderUI();
+
+            if(gameState.akaPen >= 5) declareWinner('ao', "AKA BỊ HANSOKU (5 LỖI)");
+            if(gameState.aoPen >= 5) declareWinner('aka', "AO BỊ HANSOKU (5 LỖI)");
+        }
+
+        function toggleSenshu(side) { if (!isMatchEnded) { gameState.senshu = (gameState.senshu === side) ? null : side; renderUI(); } }
+
+        function renderUI() {
+            document.getElementById('scoreAka').innerText = gameState.akaScore;
+            document.getElementById('scoreAo').innerText = gameState.aoScore;
+            const sAka = document.getElementById('senshuContainerAka'); const sAo = document.getElementById('senshuContainerAo');
+            sAka.classList.remove('senshu-active'); sAo.classList.remove('senshu-active');
+            if(gameState.senshu === 'aka') sAka.classList.add('senshu-active');
+            if(gameState.senshu === 'ao') sAo.classList.add('senshu-active');
+            updateDots('dotsAka', gameState.akaPen); updateDots('dotsAo', gameState.aoPen);
+            broadcastState();
+        }
+
+        function updateDots(id, count) {
+            const dots = document.querySelectorAll(`#${id} .dot`);
+            dots.forEach((d, i) => { d.className = 'dot'; if(i < count) d.classList.add('dot-active'); if(i === 4 && count >= 5) d.classList.add('dot-hansoku'); });
+        }
+
+        function toggleTimer() {
+            if (isMatchEnded) return;
+            timer.isRunning = !timer.isRunning;
+            const btn = document.getElementById('btnTimer');
+            btn.innerText = timer.isRunning ? "STOP" : "START";
+            btn.style.background = timer.isRunning ? "#dc3545" : "#198754";
+            if (timer.isRunning) {
+                timer.interval = setInterval(() => {
+                    if (timer.time > 0) { timer.time--; renderTimer(); }
+                    else { 
+                        toggleTimer(); 
+                        checkTimeUpWinner(); 
+                    }
+                }, 1000);
+            } else clearInterval(timer.interval);
+        }
+
+        function editTimer() {
+            if (timer.isRunning) { alert("Vui lòng dừng (STOP) đồng hồ trước khi sửa giờ!"); return; }
+            let currentStr = document.getElementById('timerDisplay').innerText;
+            let input = prompt("Nhập thời gian đếm ngược (phút:giây) - Ví dụ: 02:00", currentStr);
+            if (input) {
+                let parts = input.split(':');
+                if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                    let totalSeconds = (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+                    defaultTime = totalSeconds; 
+                    timer.time = totalSeconds;
+                    renderTimer();
+                } else alert("Sai định dạng! Hãy nhập dạng 02:00");
+            }
+        }
+
+        function resetTimer() { 
+            timer.isRunning = false; 
+            clearInterval(timer.interval); 
+            timer.time = defaultTime; 
+            renderTimer(); 
+            document.getElementById('btnTimer').innerText = "START"; 
+            document.getElementById('btnTimer').style.background = "#198754"; 
+        }
+
+        function renderTimer() {
+            let m = Math.floor(timer.time / 60).toString().padStart(2, '0'); let s = (timer.time % 60).toString().padStart(2, '0');
+            document.getElementById('timerDisplay').innerText = `${m}:${s}`; broadcastTimer(`${m}:${s}`, timer.time < 15);
+        }
+
+        function clearBoardCompletely() {
+            if(confirm("Xóa toàn bộ điểm số, thông tin tên và bắt đầu trận trắng mới?")) {
+                document.getElementById('nameAka').value = "";
+                document.getElementById('nameAo').value = "";
+                document.getElementById('teamAka').value = "";
+                document.getElementById('teamAo').value = "";
+                resetMatchData(false);
+            }
+        }
+
+        function resetMatchData(closeModal = false) { 
+            isMatchEnded = false; 
+            gameState = { akaScore: 0, aoScore: 0, akaPen: 0, aoPen: 0, senshu: null }; 
+            resetTimer(); 
+            renderUI(); 
+            broadcastInfo(); // Cập nhật lại màn hình Tivi
+            if(closeModal) document.getElementById('resultModal').style.display = 'none';
+        }
+
+        function checkTimeUpWinner() {
+            if (gameState.akaScore > gameState.aoScore) declareWinner('aka', "HẾT GIỜ - TÍNH ĐIỂM");
+            else if (gameState.aoScore > gameState.akaScore) declareWinner('ao', "HẾT GIỜ - TÍNH ĐIỂM");
+            else {
+                if (gameState.senshu === 'aka') declareWinner('aka', "HẾT GIỜ - ƯU THẾ SENSHU");
+                else if (gameState.senshu === 'ao') declareWinner('ao', "HẾT GIỜ - ƯU THẾ SENSHU");
+                else {
+                    let choice = confirm("HẾT GIỜ (HÒA)!\nBấm OK để AKA thắng Hantei.\nBấm Cancel để AO thắng Hantei.");
+                    declareWinner(choice ? 'aka' : 'ao', "QUYẾT ĐỊNH TRỌNG TÀI (HANTEI)");
+                }
+            }
+        }
+
+        function declareWinner(winnerSide, reason) {
+            if(isMatchEnded) return; 
+            isMatchEnded = true;
+            clearInterval(timer.interval);
+
+            const wName = winnerSide === 'aka' ? document.getElementById('nameAka').value : document.getElementById('nameAo').value;
+            const fallbackName = winnerSide === 'aka' ? "VĐV ĐỎ" : "VĐV XANH";
+
+            // Bắn tín hiệu sang Viewer. KHÔNG GỌI API LƯU DATABASE
+            channel.postMessage({ type: 'SHOW_WINNER', name: wName || fallbackName, side: winnerSide });
+            setTimeout(() => channel.postMessage({ type: 'SHOW_CHAMPION', name: wName || fallbackName, side: winnerSide }), 1000);
+
+            document.getElementById('winReason').innerText = reason;
+            document.getElementById('winResult').innerHTML = `<span style="color:${winnerSide==='aka'?'red':'blue'}">${wName || fallbackName} THẮNG</span>`;
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+
+        function endMatchReport() {
+            let winner = gameState.akaScore > gameState.aoScore ? 'aka' : (gameState.aoScore > gameState.akaScore ? 'ao' : gameState.senshu);
+            if(!winner) {
+                if(confirm("HÒA! AKA thắng Hantei? OK=AKA, Cancel=AO")) winner = 'aka'; else winner = 'ao';
+            }
+            if(confirm("Xác nhận kết thúc trận đấu thủ công?")) {
+                declareWinner(winner, "KẾT THÚC THỦ CÔNG");
+            }
+        }
+
+        // Khởi động
+        initManual();
+    </script>
+</body>
+</html>

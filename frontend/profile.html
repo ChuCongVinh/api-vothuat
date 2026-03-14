@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ Học viên - Karate Trí Đức</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #dc3545; --dark: #212529; --light: #f8f9fa; --gray: #6c757d; }
+        body { font-family: 'Roboto', sans-serif; background-color: #f0f2f5; margin: 0; color: #333; }
+        
+        /* Navbar */
+        .navbar { background-color: var(--dark); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .nav-brand { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: bold; color: var(--primary); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .btn-logout { background: transparent; border: 1px solid white; color: white; padding: 8px 20px; border-radius: 5px; cursor: pointer; transition: 0.3s; font-weight: bold; }
+        .btn-logout:hover { background: var(--primary); border-color: var(--primary); }
+
+        /* Container */
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+        
+        /* Card */
+        .card { background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 30px; }
+        .card-header { border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; font-size: 1.2rem; font-weight: bold; color: var(--dark); display: flex; align-items: center; gap: 10px; }
+        .card-header i { color: var(--primary); }
+
+        /* Info Display */
+        .info-group { margin-bottom: 15px; }
+        .info-label { font-size: 0.9rem; color: var(--gray); font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+        .info-value { font-size: 1.1rem; color: var(--dark); font-weight: 500; background: #f8f9fa; padding: 10px 15px; border-radius: 8px; border: 1px solid #e9ecef; }
+        .info-value.highlight { color: var(--primary); font-weight: bold; }
+
+        /* Forms */
+        .form-group { margin-bottom: 15px; }
+        .form-control { width: 100%; padding: 12px 15px; border: 1px solid #ced4da; border-radius: 8px; font-size: 1rem; box-sizing: border-box; transition: 0.3s; }
+        .form-control:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2); }
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
+        .btn-submit:hover { background: #b02a37; }
+
+        /* Attendance Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: var(--light); font-weight: bold; color: var(--gray); }
+        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .status-có { background: #d1e7dd; color: #0f5132; }
+        .status-vắng { background: #f8d7da; color: #842029; }
+        .status-phép { background: #fff3cd; color: #856404; }
+
+        .profile-avatar { width: 100px; height: 100px; background: var(--light); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 3rem; color: var(--primary); margin: 0 auto 20px; border: 3px solid var(--primary); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="#" class="nav-brand"><i class="fa-solid fa-yin-yang"></i> TRÍ ĐỨC KARATE</a>
+        <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+    </nav>
+
+    <div class="container">
+        <div>
+            <div class="card">
+                <div class="profile-avatar"><i class="fa-solid fa-user-ninja"></i></div>
+                <div class="info-group">
+                    <div class="info-label">Họ và tên</div>
+                    <div class="info-value" id="displayFullname">Đang tải...</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Tài khoản đăng nhập</div>
+                    <div class="info-value" id="displayUsername">Đang tải...</div>
+                </div>
+                <div class="info-group">
+                    <div class="info-label">Cấp đai (Level)</div>
+                    <div class="info-value highlight" id="displayLevel">Đang tải...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><i class="fa-solid fa-address-book"></i> Thông tin liên hệ</div>
+                <form id="contactForm" onsubmit="updateContact(event)">
+                    <div class="form-group">
+                        <label class="info-label">Email (Dùng để khôi phục mật khẩu)</label>
+                        <input type="email" class="form-control" id="inputEmail" placeholder="Nhập địa chỉ Email">
+                    </div>
+                    <div class="form-group">
+                        <label class="info-label">Số điện thoại</label>
+                        <input type="text" class="form-control" id="inputPhone" placeholder="Nhập số điện thoại">
+                    </div>
+                    <button type="submit" class="btn-submit">Lưu thông tin liên hệ</button>
+                </form>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <div class="card-header"><i class="fa-solid fa-key"></i> Đổi mật khẩu</div>
+                <form id="passwordForm" onsubmit="changePassword(event)">
+                    <div class="form-group">
+                        <label class="info-label">Mật khẩu hiện tại</label>
+                        <input type="password" class="form-control" id="oldPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="info-label">Mật khẩu mới</label>
+                        <input type="password" class="form-control" id="newPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="info-label">Nhập lại mật khẩu mới</label>
+                        <input type="password" class="form-control" id="confirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn-submit" style="background: var(--dark);">Cập nhật mật khẩu</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><i class="fa-solid fa-calendar-check"></i> Lịch sử điểm danh</div>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <table id="attendanceTable">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Trạng thái</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceBody">
+                            <tr><td colspan="3" style="text-align:center;">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api'; // Dùng trên Render
+        // Lấy ID người dùng từ LocalStorage (Được lưu lúc đăng nhập)
+        const userId = localStorage.getItem('userId');
+
+        // Kiểm tra xem đã đăng nhập chưa
+        if (!userId) {
+            alert("Vui lòng đăng nhập để xem thông tin!");
+            window.location.href = 'index.html'; // Đổi lại tên trang đăng nhập của bạn nếu cần
+        }
+
+        // Tải thông tin cá nhân
+        async function loadProfile() {
+            try {
+                const res = await fetch(`${API_BASE}/users/${userId}/profile`);
+                const data = await res.json();
+                
+                if(data.error) throw new Error(data.error);
+
+                document.getElementById('displayFullname').innerText = data.fullname;
+                document.getElementById('displayUsername').innerText = data.username;
+                document.getElementById('displayLevel').innerText = data.level || 'Chưa cập nhật';
+                
+                document.getElementById('inputEmail').value = data.email || '';
+                document.getElementById('inputPhone').value = data.phone || '';
+            } catch (error) {
+                console.error(error);
+                alert("Không thể tải thông tin cá nhân!");
+            }
+        }
+
+        // Tải lịch sử điểm danh
+        async function loadAttendance() {
+            try {
+                const res = await fetch(`${API_BASE}/users/${userId}/attendance`);
+                const data = await res.json();
+                
+                const tbody = document.getElementById('attendanceBody');
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Chưa có dữ liệu điểm danh</td></tr>';
+                    return;
+                }
+
+                data.forEach(item => {
+                    // Xử lý ngày (cắt bỏ phần giờ)
+                    const dateObj = new Date(item.date);
+                    const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+                    
+                    // Style trạng thái
+                    let statusClass = 'status-vắng';
+                    if (item.status === 'Có mặt') statusClass = 'status-có';
+                    else if (item.status === 'Có phép') statusClass = 'status-phép';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${formattedDate}</strong></td>
+                            <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                            <td>${item.note || ''}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // Cập nhật Liên hệ (Email, SĐT)
+        async function updateContact(e) {
+            e.preventDefault();
+            const email = document.getElementById('inputEmail').value;
+            const phone = document.getElementById('inputPhone').value;
+
+            try {
+                const res = await fetch(`${API_BASE}/users/${userId}/contact`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, phone })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Cập nhật thông tin liên hệ thành công!");
+                } else {
+                    alert("Có lỗi xảy ra, vui lòng thử lại.");
+                }
+            } catch (error) {
+                alert("Lỗi kết nối mạng!");
+            }
+        }
+
+        // Đổi mật khẩu
+        async function changePassword(e) {
+            e.preventDefault();
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                alert("Mật khẩu mới và Nhập lại mật khẩu không khớp!");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/users/${userId}/change-password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ oldPassword, newPassword })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert("Đổi mật khẩu thành công! Vui lòng sử dụng mật khẩu mới cho lần đăng nhập sau.");
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    alert(data.message || "Đổi mật khẩu thất bại.");
+                }
+            } catch (error) {
+                alert("Lỗi kết nối mạng!");
+            }
+        }
+
+        // Đăng xuất
+        function logout() {
+            if(confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+                localStorage.removeItem('userId');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userFullname');
+                window.location.href = 'index.html'; // Trở về trang chủ/đăng nhập
+            }
+        }
+
+        // Khởi chạy khi mở trang
+        loadProfile();
+        loadAttendance();
+    </script>
+</body>
+</html>

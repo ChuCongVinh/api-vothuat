@@ -23,7 +23,16 @@ const db_config = {
     password: 'Chucongvinh2004@', 
     database: 'jxcjzqgbhosting_nangkhieuTriDuc'
 };
+const nodemailer = require('nodemailer');
 
+// Cấu hình Email gửi đi (Bạn cần dùng 1 tài khoản Gmail và tạo "Mật khẩu ứng dụng" cho nó)
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'nangkhieutriduc@gmail.com', // Thay bằng Gmail của CLB
+        pass: 'qque nshc lhip dskv' // Thay bằng Mật khẩu ứng dụng (App Password)
+    }
+});
 let db;
 
 function handleDisconnect() {
@@ -147,18 +156,16 @@ app.put('/api/users/:id', (req, res) => {
 app.delete('/api/users/:id', (req, res) => {
     db.query("DELETE FROM users WHERE id=?", [req.params.id], (err) => res.json({success: !err}));
 });
+// Thay thế hàm /api/login cũ bằng hàm này:
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     db.query("SELECT * FROM users WHERE username = ? AND password = ?", [username, password], (err, results) => {
-        // Lưới bắt lỗi: Nếu DB có vấn đề, báo lỗi ngay chứ không để sập server
-        if (err) {
-            console.error("Lỗi truy vấn đăng nhập:", err);
-            return res.status(500).json({ success: false, message: "Lỗi kết nối máy chủ" });
-        }
+        if (err) return res.status(500).json({ success: false, message: "Lỗi máy chủ" });
         
-        // Chỉ đếm length khi chắc chắn results có tồn tại
         if (results && results.length > 0) {
-            res.json({ success: true, role: results[0].role, fullname: results[0].fullname });
+            const user = results[0];
+            // Trả về thêm ID, Email, Phone
+            res.json({ success: true, id: user.id, role: user.role, fullname: user.fullname, email: user.email, phone: user.phone });
         } else {
             res.status(401).json({ success: false, message: "Sai tài khoản hoặc mật khẩu" });
         }
@@ -394,7 +401,79 @@ app.get('/api/users/:id/attendance', (req, res) => {
         res.json(results);
     });
 });
+// ============================================================
+// 7. API TRANG CÁ NHÂN & QUÊN MẬT KHẨU
+// ============================================================
 
+// Lấy thông tin cá nhân
+app.get('/api/users/:id/profile', (req, res) => {
+    db.query("SELECT id, fullname, username, role, subject, join_date, status, level, email, phone FROM users WHERE id = ?", [req.params.id], (err, results) => {
+        if (err || results.length === 0) return res.status(404).json({ error: "Không tìm thấy" });
+        res.json(results[0]);
+    });
+});
+
+// Đổi mật khẩu
+app.put('/api/users/:id/change-password', (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    // Kiểm tra mật khẩu cũ trước
+    db.query("SELECT password FROM users WHERE id = ?", [req.params.id], (err, results) => {
+        if (err || results.length === 0) return res.status(404).json({ success: false, message: "Lỗi người dùng" });
+        
+        if (results[0].password !== oldPassword) {
+            return res.json({ success: false, message: "Mật khẩu cũ không chính xác!" });
+        }
+
+        // Cập nhật mật khẩu mới
+        db.query("UPDATE users SET password = ? WHERE id = ?", [newPassword, req.params.id], (err) => {
+            if (err) return res.json({ success: false, message: "Lỗi cập nhật" });
+            res.json({ success: true });
+        });
+    });
+});
+
+// Cập nhật thông tin liên hệ (Email, SĐT)
+app.put('/api/users/:id/contact', (req, res) => {
+    const { email, phone } = req.body;
+    db.query("UPDATE users SET email = ?, phone = ? WHERE id = ?", [email, phone, req.params.id], (err) => {
+        res.json({ success: !err });
+    });
+});
+
+// Gửi email Quên mật khẩu
+app.post('/api/forgot-password', (req, res) => {
+    const { email } = req.body;
+    db.query("SELECT id, username, fullname FROM users WHERE email = ?", [email], (err, results) => {
+        if (err || results.length === 0) return res.json({ success: false, message: "Email không tồn tại trong hệ thống!" });
+        
+        const user = results[0];
+        const newTempPassword = Math.random().toString(36).slice(-8); // Tạo mật khẩu ngẫu nhiên 8 ký tự
+
+        // Cập nhật mk mới vào DB
+        db.query("UPDATE users SET password = ? WHERE id = ?", [newTempPassword, user.id], (err) => {
+            if (err) return res.json({ success: false, message: "Lỗi hệ thống" });
+
+            // Gửi email
+            const mailOptions = {
+                from: 'CLB Karate Trí Đức',
+                to: email,
+                subject: 'Khôi phục mật khẩu - CLB Karate Trí Đức',
+                html: `<h3>Xin chào ${user.fullname},</h3>
+                       <p>Tài khoản của bạn là: <b>${user.username}</b></p>
+                       <p>Mật khẩu mới của bạn là: <b style="color:red; font-size:18px;">${newTempPassword}</b></p>
+                       <p>Vui lòng đăng nhập và đổi lại mật khẩu ngay nhé!</p>`
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error("Lỗi gửi mail:", error);
+                    return res.json({ success: false, message: "Không thể gửi email, vui lòng thử lại sau." });
+                }
+                res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email của bạn!" });
+            });
+        });
+    });
+});
 // ============================================================
 // KHỞI CHẠY
 // ============================================================
