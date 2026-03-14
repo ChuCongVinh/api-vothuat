@@ -461,12 +461,9 @@ app.post('/api/forgot-password', (req, res) => {
 
                 // Dùng http để bypass lỗi SSL Not Secure
                 const phpResponse = await fetch('http://nangkhieutriduc.com/send_mail.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: formData.toString()
-                });
+    method: 'POST',
+    body: formData // Node.js tự biết đây là Form và sẽ tự set Header chuẩn cho bạn
+});
                 
                 const phpResult = await phpResponse.json();
                 
