@@ -437,65 +437,50 @@ app.put('/api/users/:id/contact', (req, res) => {
 // Gửi email Quên mật khẩu
 app.post('/api/forgot-password', (req, res) => {
     const { email } = req.body;
+    
+    // 1. Kiểm tra email trong DB
     db.query("SELECT id, username, fullname FROM users WHERE email = ?", [email], async (err, results) => {
-        if (err || results.length === 0) return res.json({ success: false, message: "Email không tồn tại trong hệ thống!" });
+        if (err) return res.status(500).json({ success: false, message: "Lỗi truy vấn Database" });
+        if (results.length === 0) return res.json({ success: false, message: "Email không tồn tại trong hệ thống!" });
         
         const user = results[0];
         const newTempPassword = Math.random().toString(36).slice(-8); 
 
-        // Cập nhật mk mới vào DB
+        // 2. Cập nhật mật khẩu tạm vào DB
         db.query("UPDATE users SET password = ? WHERE id = ?", [newTempPassword, user.id], async (err) => {
-            if (err) return res.json({ success: false, message: "Lỗi hệ thống" });
+            if (err) return res.json({ success: false, message: "Không thể cập nhật mật khẩu" });
 
+            // 3. Gọi sang PHP gửi mail
             try {
-                // Tạo dữ liệu dạng Form để PHP đọc được bằng $_POST
                 const formData = new URLSearchParams();
-                formData.append('secret', 'TriDucKarate@2026'); // Khóa khớp với file PHP
+                formData.append('secret', 'TriDucKarate@2026'); 
                 formData.append('email', email);
                 formData.append('newpass', newTempPassword);
                 formData.append('username', user.username);
                 formData.append('fullname', user.fullname);
 
-                // QUAN TRỌNG: Dùng http (không có s) để vượt qua lỗi SSL đang bị "Not secure"
-                // GỌI SANG FILE PHP ĐỂ NHỜ GỬI MAIL
-try {
-    const formData = new URLSearchParams();
-    formData.append('secret', 'TriDucKarate@2026'); // Phải khớp 100% với PHP
-    formData.append('email', email);
-    formData.append('newpass', newTempPassword);
-    formData.append('username', user.username);
-    formData.append('fullname', user.fullname);
-
-    // Dùng http (không có s) vì SSL của bạn chưa xanh (Not secure)
-    const response = await fetch('http://nangkhieutriduc.com/send_mail.php', {
-        method: 'POST',
-        body: formData // Node.js sẽ tự động set Content-Type chuẩn cho PHP
-    });
-    
-    const result = await response.json();
-    if(result.success) {
-        res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email của bạn!" });
-    } else {
-        // Nếu PHP báo "Lỗi bảo mật", ta in ra để debug
-        console.log("PHP trả về lỗi:", result.message);
-        res.json({ success: false, message: "Máy chủ Mail từ chối: " + result.message });
-    }
-} catch (error) {
-    console.error("Lỗi kết nối:", error);
-    res.json({ success: false, message: "Không thể kết nối đến máy chủ Mail." });
-}
+                // Dùng http để bypass lỗi SSL Not Secure
+                const phpResponse = await fetch('http://nangkhieutriduc.com/send_mail.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: formData.toString()
+                });
                 
-                const result = await response.json();
+                const phpResult = await phpResponse.json();
                 
-                if(result.success) {
-                    res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email của bạn!" });
+                if(phpResult.success) {
+                    return res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email của bạn!" });
                 } else {
-                    console.log("PHP báo lỗi:", result.message);
-                    res.json({ success: false, message: result.message || "Máy chủ từ chối gửi mail." });
+                    return res.json({ success: false, message: "PHP báo lỗi: " + phpResult.message });
                 }
             } catch (error) {
-                console.error("Lỗi gọi PHP:", error);
-                res.json({ success: false, message: "Không thể kết nối đến máy chủ Mail." });
+                console.error("Lỗi kết nối PHP:", error);
+                // Đảm bảo chỉ gửi 1 response duy nhất ở đây
+                if (!res.headersSent) {
+                    return res.json({ success: false, message: "Không thể kết nối đến máy chủ Mail." });
+                }
             }
         });
     });
