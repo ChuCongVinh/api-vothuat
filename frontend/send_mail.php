@@ -23,7 +23,7 @@ try {
     $mail->Host       = 'smtp.gmail.com';
     $mail->SMTPAuth   = true;
     $mail->Username   = 'nangkhieutriduc@gmail.com'; // Nhập Gmail của bạn
-    $mail->Password   = 'qque nshc lhip dskv';      // Nhập mã 16 ký tự ở Bước 2
+    $mail->Password   = 'qquenshclhipdskv';      // Nhập mã 16 ký tự ở Bước 2
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
     $mail->Port       = 587;
     $mail->CharSet    = 'UTF-8';
