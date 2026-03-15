@@ -2,24 +2,31 @@
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json; charset=UTF-8');
 
-// LẤY DỮ LIỆU TỪ RENDER GỬI SANG
-$secret = $_POST['secret'] ?? '';
-$email = $_POST['email'] ?? '';
-$newPass = $_POST['newpass'] ?? '';
-$fullname = $_POST['fullname'] ?? '';
+// Chìa khóa hệ thống
+$secret_key = "TriDucKarate@2026";
 
-// KIỂM TRA KHÓA (Phải khớp 100% với server.js)
-if ($secret !== "TriDucKarate@2026") {
-    die(json_encode(['success' => false, 'message' => 'Khoa khong khop: ' . $secret]));
+// Lấy chìa khóa từ Render gửi sang (xem có bị trống không)
+$secret_received = $_POST['secret'] ?? 'TRỐNG KHÔNG';
+
+if ($secret_received !== $secret_key) {
+    die(json_encode([
+        'success' => false, 
+        'message' => 'Lỗi bảo mật. Khóa nhận được là: ' . $secret_received
+    ]));
 }
 
-$subject = "Mat khau moi - Karate Tri Duc";
-$message = "Xin chao $fullname. Mat khau moi cua ban la: $newPass";
+// ... đoạn code gửi mail tiếp theo giữ nguyên ...
+$email = $_POST['email'];
+$newPass = $_POST['newpass'];
+$fullname = $_POST['fullname'];
+
+$subject = "Khoi phuc mat khau - Karate Tri Duc";
+$message = "Mat khau moi cua ban la: $newPass";
 $headers = "From: noreply@nangkhieutriduc.com";
 
 if(mail($email, $subject, $message, $headers)) {
     echo json_encode(['success' => true]);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Hosting tu choi gui mail']);
+    echo json_encode(['success' => false, 'message' => 'Hosting chặn hàm mail()']);
 }
 ?>

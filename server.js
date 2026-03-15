@@ -435,7 +435,6 @@ app.put('/api/users/:id/contact', (req, res) => {
 });
 
 // Gửi email Quên mật khẩu
-// Gửi email Quên mật khẩu
 app.post('/api/forgot-password', (req, res) => {
     const { email } = req.body;
     db.query("SELECT id, username, fullname FROM users WHERE email = ?", [email], async (err, results) => {
@@ -445,29 +444,37 @@ app.post('/api/forgot-password', (req, res) => {
         const newTempPassword = Math.random().toString(36).slice(-8); 
 
         db.query("UPDATE users SET password = ? WHERE id = ?", [newTempPassword, user.id], async (err) => {
-            if (err) return res.json({ success: false, message: "Lỗi DB" });
+            if (err) return res.json({ success: false, message: "Lỗi cập nhật DB" });
 
             try {
-                const formData = new URLSearchParams();
-                formData.append('secret', 'TriDucKarate@2026'); // CHÌA KHÓA
-                formData.append('email', email);
-                formData.append('newpass', newTempPassword);
-                formData.append('username', user.username);
-                formData.append('fullname', user.fullname);
+                // Sử dụng URLSearchParams để giả lập form-data mà PHP cực thích
+                const params = new URLSearchParams();
+                params.append('secret', 'TriDucKarate@2026');
+                params.append('email', email);
+                params.append('newpass', newTempPassword);
+                params.append('username', user.username);
+                params.append('fullname', user.fullname);
 
                 const phpResponse = await fetch('https://nangkhieutriduc.com/send_mail.php', {
                     method: 'POST',
-                    body: formData 
+                    headers: {
+                        // BẮT BUỘC phải có dòng này để PHP nhận diện được $_POST
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: params.toString() // Phải có .toString() để mã hóa dữ liệu
                 });
                 
-                const result = await phpResponse.json();
-                if(result.success) {
+                const phpResult = await phpResponse.json();
+                
+                if(phpResult.success) {
                     return res.json({ success: true, message: "Mật khẩu mới đã được gửi vào Email!" });
                 } else {
-                    return res.json({ success: false, message: "PHP báo: " + result.message });
+                    // Hiển thị lỗi chi tiết từ PHP để mình biết nó đang thiếu gì
+                    return res.json({ success: false, message: "PHP báo lỗi: " + phpResult.message });
                 }
             } catch (error) {
-                return res.json({ success: false, message: "Lỗi kết nối Mail Server" });
+                console.error("Lỗi kết nối:", error);
+                return res.json({ success: false, message: "Không thể kết nối đến máy chủ Mail." });
             }
         });
     });
