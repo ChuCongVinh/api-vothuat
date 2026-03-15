@@ -1,38 +1,45 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require 'Exception.php';
+require 'PHPMailer.php';
+require 'SMTP.php';
+
 header('Access-Control-Allow-Origin: *');
-header('Content-Type: application/json; charset=UTF-8'); // Thêm charset ở đây
+header('Content-Type: application/json; charset=UTF-8');
 
-// Chìa khóa bảo mật để không ai gửi bậy bạ
-$secret = "TriDucKarate@2026";
-
-if (!isset($_POST['secret']) || $_POST['secret'] !== $secret) {
+// 1. Kiểm tra Secret (Giữ nguyên cho khớp Render)
+$secret = $_POST['secret'] ?? '';
+if ($secret !== "TriDucKarate@2026") {
     die(json_encode(['success' => false, 'message' => 'Lỗi bảo mật']));
 }
 
-$to = $_POST['email'];
-$newPass = $_POST['newpass'];
-$username = $_POST['username'];
-$fullname = $_POST['fullname'];
+$mail = new PHPMailer(true);
 
-$subject = "Khoi phuc mat khau - CLB Karate Tri Duc";
-$message = "
-<html>
-<body>
-    <h3>Xin chao $fullname,</h3>
-    <p>Tai khoan cua ban la: <b>$username</b></p>
-    <p>Mat khau moi cua ban la: <b style='color:red; font-size:18px;'>$newPass</b></p>
-    <p>Vui long dang nhap va doi lai mat khau nhe!</p>
-</body>
-</html>
-";
+try {
+    // 2. Cấu hình Server Gmail
+    $mail->isSMTP();
+    $mail->Host       = 'smtp.gmail.com';
+    $mail->SMTPAuth   = true;
+    $mail->Username   = 'nangkhieutriduc@gmail.com'; // Nhập Gmail của bạn
+    $mail->Password   = 'qque nshc lhip dskv';      // Nhập mã 16 ký tự ở Bước 2
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port       = 587;
+    $mail->CharSet    = 'UTF-8';
 
-$headers = "MIME-Version: 1.0" . "\r\n";
-$headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-$headers .= 'From: <noreply@nangkhieutriduc.com>' . "\r\n";
+    // 3. Người gửi & Người nhận
+    $mail->setFrom('nangkhieutriduc@gmail.com', 'CLB Karate Tri Duc');
+    $mail->addAddress($_POST['email']); 
 
-if(mail($to, $subject, $message, $headers)) {
+    // 4. Nội dung Email
+    $mail->isHTML(true);
+    $mail->Subject = 'Khôi phục mật khẩu - Karate Trí Đức';
+    $mail->Body    = "Chào <b>".$_POST['fullname']."</b>, mật khẩu mới của bạn là: <b style='color:red;'>".$_POST['newpass']."</b>";
+
+    $mail->send();
     echo json_encode(['success' => true]);
-} else {
-    echo json_encode(['success' => false, 'message' => 'May chu tu choi gui mail']);
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => "Lỗi gửi mail: {$mail->ErrorInfo}"]);
 }
 ?>
