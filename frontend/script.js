@@ -1,4 +1,4 @@
-const API_URL = 'https://nangkhieutriduc.com/api';
+const API = 'https://api-vothuat.onrender.com/api';
 
 // 1. Hàm chạy ngay khi web tải xong
 document.addEventListener('DOMContentLoaded', () => {

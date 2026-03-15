@@ -1,998 +1,1007 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Võ Đường</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        /* Sửa màu cho nút Quay lại */
-        .back-btn {
-            background-color: #f8f9fa !important; /* Nền xám nhạt */
-            color: #333 !important; /* Chữ màu đen/xám đậm */
-            border: 1px solid #ccc; /* Viền nhẹ cho nổi bật */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .back-btn:hover {
-            background-color: #e2e2e2 !important; /* Đậm hơn một chút khi di chuột */
-            color: #000 !important;
-        }
-        /* CSS GIAO DIỆN CHÍNH */
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; background: url('https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=2072&auto=format&fit=crop') center/cover; }
-        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: -1; }
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Hệ Thống Quản Lý Võ Đường</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         
-        /* SIDEBAR */
-        .sidebar { width: 260px; height: 100vh; background: linear-gradient(180deg, #1a237e 0%, #283593 100%); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.3); z-index: 100; }
-        .menu-item { padding: 12px 15px; color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; transition: 0.2s; }
-        .menu-item:hover, .active { background: #ff6f00; color: white; font-weight: bold; }
-        
-        /* CONTENT */
-        .content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
-        .section { display: none; animation: fadeIn 0.3s; }
-        .active-section { display: block !important; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        <style>
+            /* Sửa màu cho nút Quay lại */
+            .back-btn {
+                background-color: #f8f9fa !important; /* Nền xám nhạt */
+                color: #333 !important; /* Chữ màu đen/xám đậm */
+                border: 1px solid #ccc; /* Viền nhẹ cho nổi bật */
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+            .back-btn:hover {
+                background-color: #e2e2e2 !important; /* Đậm hơn một chút khi di chuột */
+                color: #000 !important;
+            }
+            /* CSS GIAO DIỆN CHÍNH */
+            body { font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; background: url('https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=2072&auto=format&fit=crop') center/cover; }
+            .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: -1; }
+            
+            /* SIDEBAR */
+            .sidebar { width: 260px; height: 100vh; background: linear-gradient(180deg, #1a237e 0%, #283593 100%); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 10px rgba(0,0,0,0.3); z-index: 100; }
+            .menu-item { padding: 12px 15px; color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; transition: 0.2s; }
+            .menu-item:hover, .active { background: #ff6f00; color: white; font-weight: bold; }
+            
+            /* CONTENT */
+            .content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
+            .section { display: none; animation: fadeIn 0.3s; }
+            .active-section { display: block !important; }
+            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* CARDS & COMPONENTS */
-        .card { background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin-bottom: 20px; }
-        .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; opacity: 1 !important; }
-        .btn:hover { opacity: 0.9 !important; transform: translateY(-1px); }
-        .btn-blue { background: #1565c0; } .btn-green { background: #2e7d32; } .btn-red { background: #c62828; } .btn-gray { background: #666; } .btn-purple { background: #6a1b9a; }
-        .btn-yellow { background: #fbc02d; color: black; }
-        
-        /* TABLE */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #333; color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #ddd; color: #333; }
-        tr:hover { background: #f1f1f1; }
+            /* CARDS & COMPONENTS */
+            .card { background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin-bottom: 20px; }
+            .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; opacity: 1 !important; }
+            .btn:hover { opacity: 0.9 !important; transform: translateY(-1px); }
+            .btn-blue { background: #1565c0; } .btn-green { background: #2e7d32; } .btn-red { background: #c62828; } .btn-gray { background: #666; } .btn-purple { background: #6a1b9a; }
+            .btn-yellow { background: #fbc02d; color: black; }
+            
+            /* TABLE */
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th { background: #333; color: white; padding: 12px; text-align: left; }
+            td { padding: 12px; border-bottom: 1px solid #ddd; color: #333; }
+            tr:hover { background: #f1f1f1; }
 
-        /* MODAL CHUNG */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 500px; }
-        input, select { padding: 10px; width: 100%; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; box-sizing: border-box; }
+            /* MODAL CHUNG */
+            .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; }
+            .modal-content { background: white; padding: 30px; border-radius: 10px; width: 500px; }
+            input, select { padding: 10px; width: 100%; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; box-sizing: border-box; }
 
-        /* CSS MÀU ĐAI (BELT) */
-        .belt-badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; border: 1px solid #ccc; display: inline-block; min-width: 80px; text-align: center; }
-        .belt-trang { background: #fff; color: #333; }
-        .belt-vang { background: #ffeb3b; color: #333; border-color: #fbc02d; }
-        .belt-xanh-la { background: #4caf50; color: white; border-color: #388e3c; }
-        .belt-xanh-duong { background: #2196f3; color: white; border-color: #1976d2; }
-        .belt-nau { background: #795548; color: white; border-color: #5d4037; }
-        .belt-den { background: #000; color: white; border-color: #000; }
+            /* CSS MÀU ĐAI (BELT) */
+            .belt-badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; border: 1px solid #ccc; display: inline-block; min-width: 80px; text-align: center; }
+            .belt-trang { background: #fff; color: #333; }
+            .belt-vang { background: #ffeb3b; color: #333; border-color: #fbc02d; }
+            .belt-xanh-la { background: #4caf50; color: white; border-color: #388e3c; }
+            .belt-xanh-duong { background: #2196f3; color: white; border-color: #1976d2; }
+            .belt-nau { background: #795548; color: white; border-color: #5d4037; }
+            .belt-den { background: #000; color: white; border-color: #000; }
 
-        /* BADGE TRẠNG THÁI */
-        .badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; }
-        .bg-student { background: #28a745; }
-        .bg-yellow { background: #ffc107; color: black; }
-        .bg-admin { background: #dc3545; }
-        .bg-gray { background: #6c757d; }
-        .bg-club { background: #17a2b8; }
-        .bg-retired { background: #343a40; text-decoration: line-through; opacity: 0.7; }
+            /* BADGE TRẠNG THÁI */
+            .badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; }
+            .bg-student { background: #28a745; }
+            .bg-yellow { background: #ffc107; color: black; }
+            .bg-admin { background: #dc3545; }
+            .bg-gray { background: #6c757d; }
+            .bg-club { background: #17a2b8; }
+            .bg-retired { background: #343a40; text-decoration: line-through; opacity: 0.7; }
 
-        /* CLUB DETAIL */
-        .club-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        .clickable-name { color: #1565c0; font-weight: bold; cursor: pointer; text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <div class="overlay"></div>
+            /* CLUB DETAIL */
+            .club-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+            .clickable-name { color: #1565c0; font-weight: bold; cursor: pointer; text-decoration: underline; }
+        </style>
+    </head>
+    <body>
+        <div class="overlay"></div>
 
-    <div class="sidebar">
-        <h2 style="text-align:center; border-bottom:1px solid #ffffff30; padding-bottom:15px;">ADMIN SYSTEM</h2>
-        <a class="menu-item active" onclick="switchTab('tab-clubs', this)"><i class="fa-solid fa-people-group"></i> CLB & Đội Nhóm</a>
-        <a class="menu-item" onclick="switchTab('tab-users', this)"><i class="fa-solid fa-users"></i> Học Viên</a>
-        <a class="menu-item" onclick="switchTab('tab-regs', this)"><i class="fa-solid fa-file-signature"></i> Đăng Ký Tập Thử</a>
-        <a class="menu-item" onclick="switchTab('tab-scores', this)"><i class="fa-solid fa-trophy"></i> Bảng Điểm</a>
-        <a class="menu-item" onclick="switchTab('tab-attendance', this)"><i class="fa-solid fa-calendar-check"></i> Điểm Danh</a>
-        <button class="btn btn-red" style="margin-top:auto" onclick="location.reload()">Thoát</button>
-    </div>
-
-    <div class="content">
-        <div id="tab-clubs" class="section active-section">
-            <h1 style="color:white; text-shadow:0 2px 4px black;">Quản Lý Câu Lạc Bộ</h1>
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <h3>Danh sách các CLB</h3>
-                    <button class="btn btn-blue" onclick="openModal('clubModal')">+ Tạo CLB Mới</button>
-                </div>
-                <table>
-                    <thead><tr><th>Tên CLB (Nhấn để xem chi tiết)</th><th>Chủ Nhiệm</th><th>SĐT</th><th>Thao Tác</th></tr></thead>
-                    <tbody id="clubTable"></tbody>
-                </table>
-            </div>
+        <div class="sidebar">
+            <h2 style="text-align:center; border-bottom:1px solid #ffffff30; padding-bottom:15px;">ADMIN SYSTEM</h2>
+            <a class="menu-item active" onclick="switchTab('tab-clubs', this)"><i class="fa-solid fa-people-group"></i> CLB & Đội Nhóm</a>
+            <a class="menu-item" onclick="switchTab('tab-users', this)"><i class="fa-solid fa-users"></i> Học Viên</a>
+            <a class="menu-item" onclick="switchTab('tab-regs', this)"><i class="fa-solid fa-file-signature"></i> Đăng Ký Tập Thử</a>
+            <a class="menu-item" onclick="switchTab('tab-scores', this)"><i class="fa-solid fa-trophy"></i> Bảng Điểm</a>
+            <a class="menu-item" onclick="switchTab('tab-attendance', this)"><i class="fa-solid fa-calendar-check"></i> Điểm Danh</a>
+            <button class="btn btn-red" style="margin-top:auto" onclick="location.reload()">Thoát</button>
         </div>
 
-        <div id="club-detail-view" class="section">
-            <div class="card">
-                <div class="club-header">
-                    <div>
-                        <button class="btn back-btn" onclick="backToClubList()"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
-                        <h2 style="display:inline-block; margin-left:15px; margin-bottom:0;" id="detailClubName">Tên CLB</h2>
+        <div class="content">
+            <div id="tab-clubs" class="section active-section">
+                <h1 style="color:white; text-shadow:0 2px 4px black;">Quản Lý Câu Lạc Bộ</h1>
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <h3>Danh sách các CLB</h3>
+                        <button class="btn btn-blue" onclick="openModal('clubModal')">+ Tạo CLB Mới</button>
                     </div>
-                    <div><button class="btn btn-green" onclick="updateClubInfo()"><i class="fa-solid fa-save"></i> Lưu Thông Tin</button></div>
+                    <table>
+                        <thead><tr><th>Tên CLB (Nhấn để xem chi tiết)</th><th>Chủ Nhiệm</th><th>SĐT</th><th>Thao Tác</th></tr></thead>
+                        <tbody id="clubTable"></tbody>
+                    </table>
                 </div>
+            </div>
 
-                <div style="display:flex; gap:20px; margin-bottom:20px;">
-                    <div style="flex:2"><label>Tên Câu Lạc Bộ</label><input type="text" id="editClubName"></div>
-                    <div style="flex:1"><label>Chủ Nhiệm / HLV</label><input type="text" id="editClubLeader"></div>
-                    <div style="flex:1"><label>Số Điện Thoại</label><input type="text" id="editClubPhone"></div>
+            <div id="club-detail-view" class="section">
+                <div class="card">
+                    <div class="club-header">
+                        <div>
+                            <button class="btn back-btn" onclick="backToClubList()"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
+                            <h2 style="display:inline-block; margin-left:15px; margin-bottom:0;" id="detailClubName">Tên CLB</h2>
+                        </div>
+                        <div><button class="btn btn-green" onclick="updateClubInfo()"><i class="fa-solid fa-save"></i> Lưu Thông Tin</button></div>
+                    </div>
+
+                    <div style="display:flex; gap:20px; margin-bottom:20px;">
+                        <div style="flex:2"><label>Tên Câu Lạc Bộ</label><input type="text" id="editClubName"></div>
+                        <div style="flex:1"><label>Chủ Nhiệm / HLV</label><input type="text" id="editClubLeader"></div>
+                        <div style="flex:1"><label>Số Điện Thoại</label><input type="text" id="editClubPhone"></div>
+                    </div>
+
+                    <div style="margin-bottom:15px; border-bottom:1px solid #ddd;">
+                        <button class="btn btn-blue" onclick="showSubTab('sub-members')">Thành Viên</button>
+                        <button class="btn btn-yellow" onclick="showSubTab('sub-funds')">Quỹ & Tài Chính</button>
+                    </div>
+
+                    <div id="sub-members">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <h3>Danh Sách Thành Viên CLB</h3>
+                            <button class="btn btn-green" onclick="openAddMemberModal()">+ Thêm Thành Viên</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th width="25%">Họ Tên</th>
+                                    <th width="15%">Trình Độ</th>
+                                    <th width="15%">Ngày Tham Gia</th>
+                                    <th width="15%">Trạng Thái</th> 
+                                    <th width="30%">Hành Động</th> 
+                                </tr>
+                            </thead>
+                            <tbody id="detailMemberTable"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="sub-funds" style="display:none;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <div><h3>Sổ Quỹ CLB</h3><span style="font-size:18px;">Số dư: <b id="fundBalance" style="color:blue">0 VNĐ</b></span></div>
+                            <button class="btn btn-green" onclick="openFundModal()">+ Thêm Giao Dịch</button>
+                        </div>
+                        <table>
+                            <thead><tr><th>Ngày</th><th>Nội Dung</th><th>Thu/Chi</th><th>Số Tiền</th><th>Xóa</th></tr></thead>
+                            <tbody id="fundTable"></tbody>
+                        </table>
+                    </div>
                 </div>
+            </div>
 
-                <div style="margin-bottom:15px; border-bottom:1px solid #ddd;">
-                    <button class="btn btn-blue" onclick="showSubTab('sub-members')">Thành Viên</button>
-                    <button class="btn btn-yellow" onclick="showSubTab('sub-funds')">Quỹ & Tài Chính</button>
+            <div id="tab-users" class="section">
+                <h1 style="color:white;">Danh Sách Học Viên</h1>
+                <div class="card">
+                    <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap: wrap;">
+                        <input type="text" id="searchUser" placeholder="Tìm kiếm..." onkeyup="filterUsers()" style="margin:0; width: 200px;">
+                        
+                        <select id="filterClub" onchange="filterUsers()" style="width:200px; margin:0;"><option value="">-- Tất cả CLB --</option></select>
+                        <select id="filterLevel" onchange="filterUsers()" style="width:150px; margin:0;">
+                            <option value="">-- Trình độ --</option>
+                            <option value="Đai trắng">Đai trắng</option>
+                            <option value="Đai vàng">Đai vàng</option>
+                            <option value="Đai xanh lá">Đai xanh lá</option>
+                            <option value="Đai xanh dương">Đai xanh dương</option>
+                            <option value="Đai nâu">Đai nâu</option>
+                            <option value="Đai đen">Đai đen</option>
+                        </select>
+                        <select id="filterStatus" onchange="filterUsers()" style="width:150px; margin:0;">
+                            <option value="">-- Trạng thái --</option>
+                            <option value="Đang tập">Đang tập</option>
+                            <option value="Đã nghỉ">Đã nghỉ</option>
+                        </select>
+
+                        <div style="flex:1; text-align:right;">
+                            <button class="btn btn-green" onclick="openModal('userModal')"><i class="fa-solid fa-user-plus"></i> Thêm 1</button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Họ Tên</th>
+                                <th>CLB</th>
+                                <th>Trình Độ</th> <th>Ngày Tham Gia</th>
+                                <th>Trạng Thái</th>
+                                <th>Hành Động</th> </tr>
+                        </thead>
+                        <tbody id="userTable"></tbody>
+                    </table>
                 </div>
+            </div>
+            <div id="user-detail-view" class="section">
+                <div class="card">
+                    <div class="club-header">
+                        <div>
+                            <button class="btn back-btn" onclick="backToUserList()"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
+                            <h2 style="display:inline-block; margin-left:15px; margin-bottom:0;" id="detailUserName">Tên Học Viên</h2>
+                        </div>
+                    </div>
 
-                <div id="sub-members">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <h3>Danh Sách Thành Viên CLB</h3>
-                        <button class="btn btn-green" onclick="openAddMemberModal()">+ Thêm Thành Viên</button>
+                    <div style="display:flex; gap:20px; margin-bottom:20px; background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 5px solid #1565c0;">
+                        <div style="flex:1; line-height: 1.8;">
+                            <p><strong>Câu lạc bộ:</strong> <span id="detailUserClub" style="color:#1565c0; font-weight:bold;"></span></p>
+                            <p><strong>Trình độ:</strong> <span id="detailUserLevel"></span></p>
+                        </div>
+                        <div style="flex:1; line-height: 1.8;">
+                            <p><strong>Ngày tham gia:</strong> <span id="detailUserJoinDate"></span></p>
+                            <p><strong>Trạng thái học:</strong> <span id="detailUserStatus"></span></p>
+                        </div>
+                    </div>
+
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> Lịch Sử Điểm Danh</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th width="30%">Ngày điểm danh</th>
+                                <th width="30%">Trạng Thái</th>
+                                <th width="40%">Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailUserAttTable">
+                            <tr><td colspan="3" style="text-align:center;">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="tab-regs" class="section">
+                <h1 style="color:white;">Quản Lý Đăng Ký Mới</h1>
+                <div class="card">
+                    <h3>Danh sách đăng ký Online</h3>
+                    <table>
+                        <thead><tr><th>Họ Tên</th><th>SĐT</th><th>Môn Đăng Ký</th><th>Cơ Sở</th><th>Hành Động</th></tr></thead>
+                        <tbody id="regTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-scores" class="section">
+                <h1 style="color:white;">Quản Lý Bảng Điểm</h1>
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <label style="font-weight:bold;">Xem điểm CLB:</label>
+                            <select id="filterScoreClub" onchange="filterScores()" style="width:200px; margin:0;"><option value="">-- Tất cả --</option></select>
+                        </div>
+                        <button class="btn btn-yellow" onclick="openScoreModal()"><i class="fa-solid fa-pen-nib"></i> Chấm Điểm Mới</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Họ Tên</th><th>CLB</th><th>Ngày Thi</th><th>LT</th><th>TH</th><th>TB</th><th>Xóa</th></tr></thead>
+                        <tbody id="scoreTable"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="tab-attendance" class="section">
+                <h1 style="color:white;">Điểm Danh Học Viên</h1>
+                <div class="card">
+                    <div style="display:flex; gap:15px; margin-bottom:15px; align-items: center; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <label style="font-weight:bold;">Ngày:</label>
+                        <input type="date" id="attDate" onchange="loadAttendance()" style="width:150px; margin:0;">
+                        
+                        <label style="font-weight:bold; margin-left:10px;">CLB:</label>
+                        <select id="attClubFilter" onchange="loadAttendance()" style="width:200px; margin:0;">
+                            <option value="">-- Chọn CLB --</option>
+                        </select>
+
+                        <button class="btn btn-green" onclick="saveAttendance()" style="margin-left:auto; padding: 10px 20px;"><i class="fa-solid fa-save"></i> Lưu Điểm Danh</button>
                     </div>
                     <table>
                         <thead>
                             <tr>
                                 <th width="25%">Họ Tên</th>
-                                <th width="15%">Trình Độ</th>
-                                <th width="15%">Ngày Tham Gia</th>
-                                <th width="15%">Trạng Thái</th> 
-                                <th width="30%">Hành Động</th> 
+                                <th width="20%">Trình Độ</th>
+                                <th width="20%">Trạng Thái</th>
+                                <th width="35%">Ghi chú (Lý do nghỉ)</th>
                             </tr>
                         </thead>
-                        <tbody id="detailMemberTable"></tbody>
-                    </table>
-                </div>
-
-                <div id="sub-funds" style="display:none;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <div><h3>Sổ Quỹ CLB</h3><span style="font-size:18px;">Số dư: <b id="fundBalance" style="color:blue">0 VNĐ</b></span></div>
-                        <button class="btn btn-green" onclick="openFundModal()">+ Thêm Giao Dịch</button>
-                    </div>
-                    <table>
-                        <thead><tr><th>Ngày</th><th>Nội Dung</th><th>Thu/Chi</th><th>Số Tiền</th><th>Xóa</th></tr></thead>
-                        <tbody id="fundTable"></tbody>
+                        <tbody id="attTable">
+                            <tr><td colspan="4" style="text-align:center; color:#666;">Vui lòng chọn Ngày và Câu Lạc Bộ để bắt đầu điểm danh</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div id="tab-users" class="section">
-            <h1 style="color:white;">Danh Sách Học Viên</h1>
-            <div class="card">
-                <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap: wrap;">
-                    <input type="text" id="searchUser" placeholder="Tìm kiếm..." onkeyup="filterUsers()" style="margin:0; width: 200px;">
-                    
-                    <select id="filterClub" onchange="filterUsers()" style="width:200px; margin:0;"><option value="">-- Tất cả CLB --</option></select>
-                    <select id="filterLevel" onchange="filterUsers()" style="width:150px; margin:0;">
-                        <option value="">-- Trình độ --</option>
-                        <option value="Đai trắng">Đai trắng</option>
-                        <option value="Đai vàng">Đai vàng</option>
-                        <option value="Đai xanh lá">Đai xanh lá</option>
-                        <option value="Đai xanh dương">Đai xanh dương</option>
-                        <option value="Đai nâu">Đai nâu</option>
-                        <option value="Đai đen">Đai đen</option>
-                    </select>
-                    <select id="filterStatus" onchange="filterUsers()" style="width:150px; margin:0;">
-                        <option value="">-- Trạng thái --</option>
-                        <option value="Đang tập">Đang tập</option>
-                        <option value="Đã nghỉ">Đã nghỉ</option>
-                    </select>
-
-                    <div style="flex:1; text-align:right;">
-                        <button class="btn btn-green" onclick="openModal('userModal')"><i class="fa-solid fa-user-plus"></i> Thêm 1</button>
-                    </div>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Họ Tên</th>
-                            <th>CLB</th>
-                            <th>Trình Độ</th> <th>Ngày Tham Gia</th>
-                            <th>Trạng Thái</th>
-                            <th>Hành Động</th> </tr>
-                    </thead>
-                    <tbody id="userTable"></tbody>
-                </table>
+        <div id="userModal" class="modal"><div class="modal-content">
+            <h3>Thêm Học Viên</h3>
+            <input type="text" id="userFullname" placeholder="Họ Tên (*)">
+            <input type="text" id="userUsername" placeholder="Username (Tự tạo nếu trống)">
+            <input type="password" id="userPass" placeholder="Password (Mặc định: 123456)">
+            
+            <div style="display:flex; gap:10px;">
+                <select id="userRole" style="flex:1"><option value="student">Học Viên</option><option value="admin">Admin</option></select>
+                <select id="userClubSelect" style="flex:1"><option value="">-- Chọn CLB --</option></select>
             </div>
-        </div>
-        <div id="user-detail-view" class="section">
-            <div class="card">
-                <div class="club-header">
-                    <div>
-                        <button class="btn back-btn" onclick="backToUserList()"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
-                        <h2 style="display:inline-block; margin-left:15px; margin-bottom:0;" id="detailUserName">Tên Học Viên</h2>
-                    </div>
-                </div>
 
-                <div style="display:flex; gap:20px; margin-bottom:20px; background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 5px solid #1565c0;">
-                    <div style="flex:1; line-height: 1.8;">
-                        <p><strong>Câu lạc bộ:</strong> <span id="detailUserClub" style="color:#1565c0; font-weight:bold;"></span></p>
-                        <p><strong>Trình độ:</strong> <span id="detailUserLevel"></span></p>
-                    </div>
-                    <div style="flex:1; line-height: 1.8;">
-                        <p><strong>Ngày tham gia:</strong> <span id="detailUserJoinDate"></span></p>
-                        <p><strong>Trạng thái học:</strong> <span id="detailUserStatus"></span></p>
-                    </div>
-                </div>
+            <label style="font-weight:bold; font-size:12px;">Trình độ (Đai)</label>
+            <select id="userLevel">
+                <option value="Đai trắng">Đai trắng</option>
+                <option value="Đai vàng">Đai vàng</option>
+                <option value="Đai xanh lá">Đai xanh lá</option>
+                <option value="Đai xanh dương">Đai xanh dương</option>
+                <option value="Đai nâu">Đai nâu</option>
+                <option value="Đai đen">Đai đen</option>
+            </select>
 
-                <h3><i class="fa-solid fa-clock-rotate-left"></i> Lịch Sử Điểm Danh</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th width="30%">Ngày điểm danh</th>
-                            <th width="30%">Trạng Thái</th>
-                            <th width="40%">Ghi chú</th>
-                        </tr>
-                    </thead>
-                    <tbody id="detailUserAttTable">
-                        <tr><td colspan="3" style="text-align:center;">Đang tải dữ liệu...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div id="tab-regs" class="section">
-            <h1 style="color:white;">Quản Lý Đăng Ký Mới</h1>
-            <div class="card">
-                <h3>Danh sách đăng ký Online</h3>
-                <table>
-                    <thead><tr><th>Họ Tên</th><th>SĐT</th><th>Môn Đăng Ký</th><th>Cơ Sở</th><th>Hành Động</th></tr></thead>
-                    <tbody id="regTable"></tbody>
-                </table>
-            </div>
-        </div>
+            <button class="btn btn-green" onclick="saveUser()">Lưu</button>
+            <button class="btn btn-red" onclick="closeModal('userModal')">Đóng</button>
+        </div></div>
 
-        <div id="tab-scores" class="section">
-            <h1 style="color:white;">Quản Lý Bảng Điểm</h1>
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:15px;">
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <label style="font-weight:bold;">Xem điểm CLB:</label>
-                        <select id="filterScoreClub" onchange="filterScores()" style="width:200px; margin:0;"><option value="">-- Tất cả --</option></select>
-                    </div>
-                    <button class="btn btn-yellow" onclick="openScoreModal()"><i class="fa-solid fa-pen-nib"></i> Chấm Điểm Mới</button>
-                </div>
-                <table>
-                    <thead><tr><th>Họ Tên</th><th>CLB</th><th>Ngày Thi</th><th>LT</th><th>TH</th><th>TB</th><th>Xóa</th></tr></thead>
-                    <tbody id="scoreTable"></tbody>
-                </table>
-            </div>
-        </div>
-        <div id="tab-attendance" class="section">
-            <h1 style="color:white;">Điểm Danh Học Viên</h1>
-            <div class="card">
-                <div style="display:flex; gap:15px; margin-bottom:15px; align-items: center; background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                    <label style="font-weight:bold;">Ngày:</label>
-                    <input type="date" id="attDate" onchange="loadAttendance()" style="width:150px; margin:0;">
-                    
-                    <label style="font-weight:bold; margin-left:10px;">CLB:</label>
-                    <select id="attClubFilter" onchange="loadAttendance()" style="width:200px; margin:0;">
-                        <option value="">-- Chọn CLB --</option>
-                    </select>
-
-                    <button class="btn btn-green" onclick="saveAttendance()" style="margin-left:auto; padding: 10px 20px;"><i class="fa-solid fa-save"></i> Lưu Điểm Danh</button>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th width="25%">Họ Tên</th>
-                            <th width="20%">Trình Độ</th>
-                            <th width="20%">Trạng Thái</th>
-                            <th width="35%">Ghi chú (Lý do nghỉ)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="attTable">
-                        <tr><td colspan="4" style="text-align:center; color:#666;">Vui lòng chọn Ngày và Câu Lạc Bộ để bắt đầu điểm danh</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="userModal" class="modal"><div class="modal-content">
-        <h3>Thêm Học Viên</h3>
-        <input type="text" id="userFullname" placeholder="Họ Tên (*)">
-        <input type="text" id="userUsername" placeholder="Username (Tự tạo nếu trống)">
-        <input type="password" id="userPass" placeholder="Password (Mặc định: 123456)">
-        
-        <div style="display:flex; gap:10px;">
-            <select id="userRole" style="flex:1"><option value="student">Học Viên</option><option value="admin">Admin</option></select>
-            <select id="userClubSelect" style="flex:1"><option value="">-- Chọn CLB --</option></select>
-        </div>
-
-        <label style="font-weight:bold; font-size:12px;">Trình độ (Đai)</label>
-        <select id="userLevel">
-            <option value="Đai trắng">Đai trắng</option>
-            <option value="Đai vàng">Đai vàng</option>
-            <option value="Đai xanh lá">Đai xanh lá</option>
-            <option value="Đai xanh dương">Đai xanh dương</option>
-            <option value="Đai nâu">Đai nâu</option>
-            <option value="Đai đen">Đai đen</option>
-        </select>
-
-        <button class="btn btn-green" onclick="saveUser()">Lưu</button>
-        <button class="btn btn-red" onclick="closeModal('userModal')">Đóng</button>
-    </div></div>
-
-    <div id="editMemberModal" class="modal">
+        <div id="editMemberModal" class="modal">
         <div class="modal-content">
             <h3>Cập Nhật Thông Tin</h3>
             <input type="hidden" id="editMemId">
-            <input type="hidden" id="editMemCurrentClubId"> <label style="font-weight:bold; font-size:12px;">Họ và Tên</label>
+            
+            <label style="font-weight:bold; font-size:12px;">Họ và Tên</label>
             <input type="text" id="editMemName">
-            
-            <div style="display:flex; gap:15px; margin-top:10px;">
-                <div style="flex:1">
-                    <label style="font-weight:bold; font-size:12px;">Trình Độ</label>
-                    <select id="editMemLevel">
-                        <option value="Đai trắng">Đai trắng</option>
-                        <option value="Đai vàng">Đai vàng</option>
-                        <option value="Đai xanh lá">Đai xanh lá</option>
-                        <option value="Đai xanh dương">Đai xanh dương</option>
-                        <option value="Đai nâu">Đai nâu</option>
-                        <option value="Đai đen">Đai đen</option>
-                    </select>
+
+            <label style="font-weight:bold; font-size:12px; margin-top:10px; display:block;">Câu Lạc Bộ</label>
+            <select id="editMemClubSelect" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px;">
+                <option value="">-- Chọn CLB --</option>
+            </select>
+                
+                <div style="display:flex; gap:15px; margin-top:10px;">
+                    <div style="flex:1">
+                        <label style="font-weight:bold; font-size:12px;">Trình Độ</label>
+                        <select id="editMemLevel">
+                            <option value="Đai trắng">Đai trắng</option>
+                            <option value="Đai vàng">Đai vàng</option>
+                            <option value="Đai xanh lá">Đai xanh lá</option>
+                            <option value="Đai xanh dương">Đai xanh dương</option>
+                            <option value="Đai nâu">Đai nâu</option>
+                            <option value="Đai đen">Đai đen</option>
+                        </select>
+                    </div>
+                    <div style="flex:1">
+                        <label style="font-weight:bold; font-size:12px;">Trạng Thái</label>
+                        <select id="editMemStatus">
+                            <option value="1 buổi / tuần">1 buổi / tuần</option>
+                            <option value="2 buổi / tuần">2 buổi / tuần</option>
+                            <option value="3 buổi / tuần">3 buổi / tuần</option>
+                            <option value="Tập thử">Tập thử</option>
+                            <option value="Đã nghỉ" style="color:red; font-weight:bold;">Đã nghỉ</option> </select>
+                    </div>
                 </div>
-                <div style="flex:1">
-                    <label style="font-weight:bold; font-size:12px;">Trạng Thái</label>
-                    <select id="editMemStatus">
-                        <option value="1 buổi / tuần">1 buổi / tuần</option>
-                        <option value="2 buổi / tuần">2 buổi / tuần</option>
-                        <option value="3 buổi / tuần">3 buổi / tuần</option>
-                        <option value="Tập thử">Tập thử</option>
-                        <option value="Đã nghỉ" style="color:red; font-weight:bold;">Đã nghỉ</option> </select>
+
+                <div style="margin-top:10px;">
+                    <label style="font-weight:bold; font-size:12px;">Ngày Tham Gia</label>
+                    <input type="date" id="editMemDate">
                 </div>
-            </div>
 
-            <div style="margin-top:10px;">
-                <label style="font-weight:bold; font-size:12px;">Ngày Tham Gia</label>
-                <input type="date" id="editMemDate">
-            </div>
+                <label style="font-weight:bold; font-size:12px; margin-top:10px;">Ghi chú</label>
+                <input type="text" id="editMemNote">
 
-            <label style="font-weight:bold; font-size:12px; margin-top:10px;">Ghi chú</label>
-            <input type="text" id="editMemNote">
-
-            <div style="text-align:right; margin-top:20px;">
-                <button class="btn btn-blue" onclick="saveEditedMember()">Lưu Thay Đổi</button>
-                <button class="btn btn-gray" onclick="closeModal('editMemberModal')">Đóng</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="clubModal" class="modal"><div class="modal-content">
-        <h3>Thêm CLB Mới</h3>
-        <input type="text" id="newClubName" placeholder="Tên CLB">
-        <input type="text" id="newClubLeader" placeholder="Trưởng đoàn">
-        <input type="text" id="newClubPhone" placeholder="SĐT">
-        <button class="btn btn-blue" onclick="saveClub()">Lưu</button>
-        <button class="btn btn-red" onclick="closeModal('clubModal')">Đóng</button>
-    </div></div>
-    <div id="fundModal" class="modal"><div class="modal-content">
-        <h3>Giao Dịch Quỹ</h3>
-        <select id="fundType"><option value="thu">Thu</option><option value="chi">Chi</option></select>
-        <input type="text" id="fundDesc" placeholder="Nội dung">
-        <input type="number" id="fundAmount" placeholder="Số tiền">
-        <button class="btn btn-green" onclick="saveFund()">Lưu</button>
-        <button class="btn btn-red" onclick="closeModal('fundModal')">Đóng</button>
-    </div></div>
-    <div id="scoreModal" class="modal"><div class="modal-content">
-        <h3>Nhập Kết Quả Thi</h3>
-        <div style="display:flex; gap:5px; margin-bottom:10px;">
-            <select id="scoreModalClubFilter" onchange="filterStudentSelect()" style="flex:1;"><option value="">-- Lọc CLB --</option></select>
-            <select id="scoreStudentSelect" style="flex:2;"><option value="">-- Chọn tên --</option></select>
-        </div>
-        <div style="display:flex; gap:15px; margin-bottom:10px;">
-            <div style="flex:1;"><label>2. Lý Thuyết</label><input type="number" id="scoreTheory" placeholder="0-10"></div>
-            <div style="flex:1;"><label>3. Thực Hành</label><input type="number" id="scorePractice" placeholder="0-10"></div>
-        </div>
-        <label>4. Ngày Thi</label><input type="date" id="scoreDate">
-        <div style="text-align:right; margin-top:15px;"><button class="btn btn-yellow" onclick="saveScore()">Lưu Kết Quả</button><button class="btn btn-red" onclick="closeModal('scoreModal')">Đóng</button></div>
-    </div></div>
-    <div id="addMemModal" class="modal">
-        <div class="modal-content">
-            <div style="margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
-                <h3 style="margin:0">Thêm thành viên vào CLB</h3>
-            </div>
-            
-            <label style="font-weight:bold; font-size:12px;">Họ và tên võ sinh (*) - Nhập mỗi tên 1 dòng</label>
-            <textarea id="memNames" style="width:100%; height:150px; padding:10px; resize:vertical; border:1px solid #ccc;" placeholder="Ví dụ:&#10;Nguyễn Văn A&#10;Trần Văn B"></textarea>
-            
-            <div style="display:flex; gap:15px; margin-top:15px;">
-                <div style="flex:1">
-                    <label style="font-weight:bold; font-size:12px;">Trình độ</label>
-                    <select id="memLevel">
-                        <option value="Đai trắng">Đai trắng</option>
-                        <option value="Đai vàng">Đai vàng</option>
-                        <option value="Đai xanh lá">Đai xanh lá</option>
-                        <option value="Đai xanh dương">Đai xanh dương</option>
-                        <option value="Đai nâu">Đai nâu</option>
-                        <option value="Đai đen">Đai đen</option>
-                    </select>
-                </div>
-                <div style="flex:1">
-                    <label style="font-weight:bold; font-size:12px;">Ngày gia nhập</label>
-                    <input type="date" id="memDate"> 
+                <div style="text-align:right; margin-top:20px;">
+                    <button class="btn btn-blue" onclick="saveEditedMember()">Lưu Thay Đổi</button>
+                    <button class="btn btn-gray" onclick="closeModal('editMemberModal')">Đóng</button>
                 </div>
             </div>
+        </div>
 
-            <div style="text-align:right; margin-top:20px;">
-                <button class="btn btn-blue" onclick="saveMemberToClub()">Thêm mới</button>
-                <button class="btn btn-gray" onclick="closeModal('addMemModal')">Đóng</button>
+        <div id="clubModal" class="modal"><div class="modal-content">
+            <h3>Thêm CLB Mới</h3>
+            <input type="text" id="newClubName" placeholder="Tên CLB">
+            <input type="text" id="newClubLeader" placeholder="Trưởng đoàn">
+            <input type="text" id="newClubPhone" placeholder="SĐT">
+            <button class="btn btn-blue" onclick="saveClub()">Lưu</button>
+            <button class="btn btn-red" onclick="closeModal('clubModal')">Đóng</button>
+        </div></div>
+        <div id="fundModal" class="modal"><div class="modal-content">
+            <h3>Giao Dịch Quỹ</h3>
+            <select id="fundType"><option value="thu">Thu</option><option value="chi">Chi</option></select>
+            <input type="text" id="fundDesc" placeholder="Nội dung">
+            <input type="number" id="fundAmount" placeholder="Số tiền">
+            <button class="btn btn-green" onclick="saveFund()">Lưu</button>
+            <button class="btn btn-red" onclick="closeModal('fundModal')">Đóng</button>
+        </div></div>
+        <div id="scoreModal" class="modal"><div class="modal-content">
+            <h3>Nhập Kết Quả Thi</h3>
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <select id="scoreModalClubFilter" onchange="filterStudentSelect()" style="flex:1;"><option value="">-- Lọc CLB --</option></select>
+                <select id="scoreStudentSelect" style="flex:2;"><option value="">-- Chọn tên --</option></select>
+            </div>
+            <div style="display:flex; gap:15px; margin-bottom:10px;">
+                <div style="flex:1;"><label>2. Lý Thuyết</label><input type="number" id="scoreTheory" placeholder="0-10"></div>
+                <div style="flex:1;"><label>3. Thực Hành</label><input type="number" id="scorePractice" placeholder="0-10"></div>
+            </div>
+            <label>4. Ngày Thi</label><input type="date" id="scoreDate">
+            <div style="text-align:right; margin-top:15px;"><button class="btn btn-yellow" onclick="saveScore()">Lưu Kết Quả</button><button class="btn btn-red" onclick="closeModal('scoreModal')">Đóng</button></div>
+        </div></div>
+        <div id="addMemModal" class="modal">
+            <div class="modal-content">
+                <div style="margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+                    <h3 style="margin:0">Thêm thành viên vào CLB</h3>
+                </div>
+                
+                <label style="font-weight:bold; font-size:12px;">Họ và tên võ sinh (*) - Nhập mỗi tên 1 dòng</label>
+                <textarea id="memNames" style="width:100%; height:150px; padding:10px; resize:vertical; border:1px solid #ccc;" placeholder="Ví dụ:&#10;Nguyễn Văn A&#10;Trần Văn B"></textarea>
+                
+                <div style="display:flex; gap:15px; margin-top:15px;">
+                    <div style="flex:1">
+                        <label style="font-weight:bold; font-size:12px;">Trình độ</label>
+                        <select id="memLevel">
+                            <option value="Đai trắng">Đai trắng</option>
+                            <option value="Đai vàng">Đai vàng</option>
+                            <option value="Đai xanh lá">Đai xanh lá</option>
+                            <option value="Đai xanh dương">Đai xanh dương</option>
+                            <option value="Đai nâu">Đai nâu</option>
+                            <option value="Đai đen">Đai đen</option>
+                        </select>
+                    </div>
+                    <div style="flex:1">
+                        <label style="font-weight:bold; font-size:12px;">Ngày gia nhập</label>
+                        <input type="date" id="memDate"> 
+                    </div>
+                </div>
+
+                <div style="text-align:right; margin-top:20px;">
+                    <button class="btn btn-blue" onclick="saveMemberToClub()">Thêm mới</button>
+                    <button class="btn btn-gray" onclick="closeModal('addMemModal')">Đóng</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        const API = 'https://api-vothuat.onrender.com/api';
-        
-        let currentClubId = null; 
-        let allUsers = [];
-        let allClubs = [];
-        let allScores = []; 
-        let pendingDeleteRegId = null; // Biến lưu ID đơn đăng ký đang chờ duyệt
-
-        // --- HÀM TIỆN ÍCH MÀU ĐAI ---
-        function getBeltColorClass(level) {
-            if(!level) return 'belt-trang';
-            const l = level.toLowerCase();
-            if(l.includes('vàng')) return 'belt-vang';
-            if(l.includes('xanh lá')) return 'belt-xanh-la';
-            if(l.includes('xanh dương')) return 'belt-xanh-duong';
-            if(l.includes('nâu')) return 'belt-nau';
-            if(l.includes('đen')) return 'belt-den';
-            return 'belt-trang';
-        }
-
-        // --- ĐIỀU HƯỚNG ---
-        function switchTab(id, el) {
-            document.querySelectorAll('.section').forEach(e => e.classList.remove('active-section'));
-            document.getElementById(id).classList.add('active-section');
-            document.querySelectorAll('.menu-item').forEach(e => e.classList.remove('active'));
-            el.classList.add('active');
+        <script>
+            const API = 'https://api-vothuat.onrender.com/api';
             
-            if(id === 'tab-clubs') loadClubs();
-            if(id === 'tab-users') loadAllUsers();
-            if(id === 'tab-scores') loadScores();
-            if(id === 'tab-regs') loadRegistrations(); // <--- MỚI
-            // Thêm dòng này vào cuối hàm switchTab
-        if(id === 'tab-attendance') {
-            if(!document.getElementById('attDate').value) document.getElementById('attDate').value = new Date().toISOString().split('T')[0];
-            loadAttendance();
-        }
-        }
+            let currentClubId = null; 
+            let allUsers = [];
+            let allClubs = [];
+            let allScores = []; 
+            let pendingDeleteRegId = null; // Biến lưu ID đơn đăng ký đang chờ duyệt
 
-        function showSubTab(id) {
-            document.getElementById('sub-members').style.display = (id === 'sub-members') ? 'block' : 'none';
-            document.getElementById('sub-funds').style.display = (id === 'sub-funds') ? 'block' : 'none';
-        }
-
-        // --- 2. MODAL & HELPER ---
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { 
-            document.getElementById(id).style.display = 'none'; 
-            // Reset biến duyệt đăng ký khi đóng modal user
-            if(id === 'userModal') pendingDeleteRegId = null;
-        }
-        async function del(url, cb) { if(confirm("Chắc chắn xóa?")) { await fetch(url, {method:'DELETE'}); cb(); } }
-
-        // --- 3. CLB ---
-        async function loadClubs() {
-            const res = await fetch(API + '/clubs');
-            allClubs = await res.json();
-            
-            const table = document.getElementById('clubTable');
-            if(table) {
-                table.innerHTML = allClubs.map(c => `
-                    <tr>
-                        <td class="clickable-name" onclick="viewClubDetail(${c.id}, '${c.name}', '${c.leader}', '${c.phone}')">${c.name}</td>
-                        <td>${c.leader || '-'}</td>
-                        <td>${c.phone || '-'}</td>
-                        <td><button class="btn btn-red" onclick="del('${API}/clubs/${c.id}', loadClubs)">Xóa</button></td>
-                    </tr>
-                `).join('');
+            // --- HÀM TIỆN ÍCH MÀU ĐAI ---
+            function getBeltColorClass(level) {
+                if(!level) return 'belt-trang';
+                const l = level.toLowerCase();
+                if(l.includes('vàng')) return 'belt-vang';
+                if(l.includes('xanh lá')) return 'belt-xanh-la';
+                if(l.includes('xanh dương')) return 'belt-xanh-duong';
+                if(l.includes('nâu')) return 'belt-nau';
+                if(l.includes('đen')) return 'belt-den';
+                return 'belt-trang';
             }
 
-            const opts = '<option value="">-- Chọn CLB --</option>' + allClubs.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            const filterOpts = '<option value="">-- Tất cả CLB --</option>' + allClubs.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-            
-            if(document.getElementById('userClubSelect')) document.getElementById('userClubSelect').innerHTML = opts;
-            if(document.getElementById('bulkClubSelect')) document.getElementById('bulkClubSelect').innerHTML = opts;
-            if(document.getElementById('filterClub')) document.getElementById('filterClub').innerHTML = filterOpts;
-            if(document.getElementById('filterScoreClub')) document.getElementById('filterScoreClub').innerHTML = filterOpts;
-            if(document.getElementById('scoreModalClubFilter')) document.getElementById('scoreModalClubFilter').innerHTML = opts.replace("Chọn CLB", "Lọc theo CLB");
-            if(document.getElementById('attClubFilter')) document.getElementById('attClubFilter').innerHTML = opts;
-        }
-
-        async function saveClub() {
-            await fetch(API + '/clubs', {
-                method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ name: document.getElementById('newClubName').value, leader: document.getElementById('newClubLeader').value, phone: document.getElementById('newClubPhone').value })
-            });
-            closeModal('clubModal'); loadClubs();
-        }
-
-        function viewClubDetail(id, name, leader, phone) {
-            currentClubId = id;
-            document.getElementById('detailClubName').innerText = name;
-            document.getElementById('editClubName').value = name;
-            document.getElementById('editClubLeader').value = leader !== 'null' ? leader : '';
-            document.getElementById('editClubPhone').value = phone !== 'null' ? phone : '';
-
-            document.getElementById('tab-clubs').classList.remove('active-section');
-            document.getElementById('club-detail-view').classList.add('active-section');
-
-            loadClubMembers(id);
-            loadClubFunds(id);
-        }
-
-        function backToClubList() {
-            document.getElementById('club-detail-view').classList.remove('active-section');
-            document.getElementById('tab-clubs').classList.add('active-section');
-            loadClubs();
-        }
-
-        async function updateClubInfo() {
-            await fetch(API + '/clubs/' + currentClubId, {
-                method: 'PUT', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ name: document.getElementById('editClubName').value, leader: document.getElementById('editClubLeader').value, phone: document.getElementById('editClubPhone').value })
-            });
-            alert("Đã cập nhật!");
-        }
-
-        async function loadClubMembers(id) {
-            const res = await fetch(`${API}/clubs/${id}/members`);
-            const data = await res.json();
-            
-            document.getElementById('detailMemberTable').innerHTML = data.map(u => {
-                const joinDate = u.join_date ? new Date(u.join_date).toLocaleDateString('vi-VN') : '-';
-                let badgeClass = 'bg-gray'; 
-                const s = u.status || '';
-                if(s.includes('buổi')) badgeClass = 'bg-student'; 
-                else if(s === 'Tập thử') badgeClass = 'bg-yellow'; 
-                else if(s === 'Đã nghỉ') badgeClass = 'bg-retired'; // Màu xám gạch ngang
+            // --- ĐIỀU HƯỚNG ---
+            function switchTab(id, el) {
+                document.querySelectorAll('.section').forEach(e => e.classList.remove('active-section'));
+                document.getElementById(id).classList.add('active-section');
+                document.querySelectorAll('.menu-item').forEach(e => e.classList.remove('active'));
+                el.classList.add('active');
                 
-                const userJson = JSON.stringify(u).replace(/"/g, "&quot;");
-                const beltClass = getBeltColorClass(u.level);
+                if(id === 'tab-clubs') loadClubs();
+                if(id === 'tab-users') loadAllUsers();
+                if(id === 'tab-scores') loadScores();
+                if(id === 'tab-regs') loadRegistrations(); // <--- MỚI
+                // Thêm dòng này vào cuối hàm switchTab
+            if(id === 'tab-attendance') {
+                if(!document.getElementById('attDate').value) document.getElementById('attDate').value = new Date().toISOString().split('T')[0];
+                loadAttendance();
+            }
+            }
 
-                return `
-                <tr>
-                    <td style="font-weight:bold; color:#333;">${u.fullname}</td>
-                    <td><span class="belt-badge ${beltClass}" style="min-width:60px; font-size:11px;">${u.level||'Đai trắng'}</span></td>
-                    <td>${joinDate}</td>
-                    <td><span class="badge ${badgeClass}">${u.status || '1 buổi / tuần'}</span></td>
-                    <td>
-                        <button class="btn btn-yellow" style="padding:5px 10px;" onclick="openEditMemberModal(${userJson})"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn btn-red" style="padding:5px 10px;" onclick="del('${API}/users/${u.id}', () => loadClubMembers(currentClubId))"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
-            `}).join('');
-        }
+            function showSubTab(id) {
+                document.getElementById('sub-members').style.display = (id === 'sub-members') ? 'block' : 'none';
+                document.getElementById('sub-funds').style.display = (id === 'sub-funds') ? 'block' : 'none';
+            }
 
-        function openEditMemberModal(u) {
-            document.getElementById('editMemId').value = u.id;
-            document.getElementById('editMemCurrentClubId').value = u.club_id; 
-            document.getElementById('editMemName').value = u.fullname;
-            document.getElementById('editMemLevel').value = u.level || 'Đai trắng';
-            document.getElementById('editMemStatus').value = u.status || 'Chính thức';
-            document.getElementById('editMemNote').value = u.note || '';
-            
-            if(u.join_date) document.getElementById('editMemDate').value = new Date(u.join_date).toISOString().split('T')[0];
-            else document.getElementById('editMemDate').value = '';
-            
-            openModal('editMemberModal');
-        }
+            // --- 2. MODAL & HELPER ---
+            function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+            function closeModal(id) { 
+                document.getElementById(id).style.display = 'none'; 
+                // Reset biến duyệt đăng ký khi đóng modal user
+                if(id === 'userModal') pendingDeleteRegId = null;
+            }
+            async function del(url, cb) { if(confirm("Chắc chắn xóa?")) { await fetch(url, {method:'DELETE'}); cb(); } }
 
-        async function saveEditedMember() {
-            const id = document.getElementById('editMemId').value;
-            const clubId = document.getElementById('editMemCurrentClubId').value; 
-            
-            const body = {
-                fullname: document.getElementById('editMemName').value,
-                join_date: document.getElementById('editMemDate').value,
-                status: document.getElementById('editMemStatus').value,
-                note: document.getElementById('editMemNote').value,
-                level: document.getElementById('editMemLevel').value,
-                club_id: clubId
-            };
-
-            await fetch(API + '/users/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-            alert("Cập nhật thành công!");
-            closeModal('editMemberModal');
-            
-            if(document.getElementById('tab-users').classList.contains('active-section')) loadAllUsers();
-            else loadClubMembers(currentClubId);
-        } 
-
-        // --- HÀM THÊM USER (ĐÃ SỬA: Thêm Level & Xóa đăng ký cũ) ---
-        function openUserModal() { 
-            document.getElementById('userFullname').value=''; 
-            document.getElementById('userUsername').value=''; 
-            openModal('userModal'); 
-        }
-
-        async function saveUser() {
-            const fullname = document.getElementById('userFullname').value;
-            const username = document.getElementById('userUsername').value || "user"+Math.floor(Math.random()*10000);
-            const pass = document.getElementById('userPass').value || "123456";
-            const role = document.getElementById('userRole').value;
-            const clubId = document.getElementById('userClubSelect').value;
-            const level = document.getElementById('userLevel').value; // Lấy màu đai
-
-            if(!fullname || !clubId) return alert("Vui lòng điền Tên và Chọn CLB!");
-
-            // 1. Gửi lên Server
-            const res = await fetch(API + '/users', {
-                method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ 
-                    fullname, username, password: pass, role, club_id: clubId, 
-                    level: level // Gửi level lên
-                })
-            });
-            const data = await res.json();
-
-            if(data.success) {
-                // 2. Nếu đang Duyệt từ Đăng ký -> Xóa đơn đăng ký cũ
-                if (pendingDeleteRegId) {
-                    await fetch(`${API}/registrations/${pendingDeleteRegId}`, { method: 'DELETE' });
-                    pendingDeleteRegId = null; // Reset
-                    loadRegistrations(); // Tải lại bảng đăng ký
+            // --- 3. CLB ---
+            async function loadClubs() {
+                const res = await fetch(API + '/clubs');
+                allClubs = await res.json();
+                
+                const table = document.getElementById('clubTable');
+                if(table) {
+                    table.innerHTML = allClubs.map(c => `
+                        <tr>
+                            <td class="clickable-name" onclick="viewClubDetail(${c.id}, '${c.name}', '${c.leader}', '${c.phone}')">${c.name}</td>
+                            <td>${c.leader || '-'}</td>
+                            <td>${c.phone || '-'}</td>
+                            <td><button class="btn btn-red" onclick="del('${API}/clubs/${c.id}', loadClubs)">Xóa</button></td>
+                        </tr>
+                    `).join('');
                 }
 
-                alert("Thêm thành công!");
-                closeModal('userModal'); 
-                loadAllUsers();
-            } else {
-                alert("Lỗi: " + (data.message || "Không thể lưu"));
-            }
+                const opts = '<option value="">-- Chọn CLB --</option>' + allClubs.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                const filterOpts = '<option value="">-- Tất cả CLB --</option>' + allClubs.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+                
+                if(document.getElementById('userClubSelect')) document.getElementById('userClubSelect').innerHTML = opts;
+                if(document.getElementById('bulkClubSelect')) document.getElementById('bulkClubSelect').innerHTML = opts;
+                if(document.getElementById('filterClub')) document.getElementById('filterClub').innerHTML = filterOpts;
+                if(document.getElementById('filterScoreClub')) document.getElementById('filterScoreClub').innerHTML = filterOpts;
+                if(document.getElementById('scoreModalClubFilter')) document.getElementById('scoreModalClubFilter').innerHTML = opts.replace("Chọn CLB", "Lọc theo CLB");
+                if(document.getElementById('attClubFilter')) document.getElementById('attClubFilter').innerHTML = opts;
+            // Bơm danh sách CLB vào form Cập nhật học viên
+            if(document.getElementById('editMemClubSelect')) document.getElementById('editMemClubSelect').innerHTML = opts;
         }
-
-        // --- QUỸ ---
-        async function loadClubFunds(id) {
-            const res = await fetch(`${API}/clubs/${id}/funds`);
-            const data = await res.json();
-            let bal = 0;
-            document.getElementById('fundTable').innerHTML = data.map(f => {
-                bal += parseFloat(f.amount);
-                const isThu = f.type === 'thu';
-                return `<tr><td>${new Date(f.created_at).toLocaleDateString()}</td><td>${f.description}</td><td><span class="${isThu?'money-plus':'money-minus'}">${isThu?'THU':'CHI'}</span></td><td class="${isThu?'money-plus':'money-minus'}">${parseInt(f.amount).toLocaleString()}</td><td><button class="btn btn-gray" onclick="del('${API}/funds/${f.id}', () => loadClubFunds(currentClubId))">X</button></td></tr>`;
-            }).join('');
-            document.getElementById('fundBalance').innerText = bal.toLocaleString() + ' VNĐ';
-        }
-
-        function openFundModal() { 
-            if(!currentClubId) return alert("Lỗi ID CLB");
-            document.getElementById('fundDesc').value = ''; document.getElementById('fundAmount').value = '';
-            openModal('fundModal'); 
-        }
-
-        async function saveFund() {
-            await fetch(API + '/funds', {
-                method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ club_id: currentClubId, type: document.getElementById('fundType').value, description: document.getElementById('fundDesc').value, amount: document.getElementById('fundAmount').value })
-            });
-            closeModal('fundModal'); loadClubFunds(currentClubId);
-        }
-
-        // --- 4. HỌC VIÊN ---
-        async function loadAllUsers() {
-            await loadClubs(); 
-            const res = await fetch(API + '/users');
-            allUsers = await res.json();
-            filterUsers();
-        }
-
-        function filterUsers() {
-            const kw = document.getElementById('searchUser').value.toLowerCase();
-            const clb = document.getElementById('filterClub').value;
-            const level = document.getElementById('filterLevel').value;
-            const statusFilter = document.getElementById('filterStatus').value;
-
-            const list = allUsers.filter(u => {
-                const uClub = u.club_name || "";
-                const uLevel = u.level || "Đai trắng";
-                const uStatus = u.status || "";
-
-                const matchKw = (u.fullname.toLowerCase().includes(kw) || u.username.includes(kw));
-                const matchClub = (clb === "" || uClub === clb);
-                const matchLevel = (level === "" || uLevel === level);
-                // Logic lọc trạng thái: 
-                // Nếu chọn "Đã nghỉ" -> Chỉ hiện người đã nghỉ
-                // Nếu chọn "Đang tập" -> Hiện tất cả TRỪ người đã nghỉ
-                // Nếu không chọn gì -> Hiện tất cả
-                let matchStatus = true;
-                if(statusFilter === "Đã nghỉ") matchStatus = (uStatus === "Đã nghỉ");
-                else if(statusFilter === "Đang tập") matchStatus = (uStatus !== "Đã nghỉ");
-
-                return matchKw && matchClub && matchLevel && matchStatus;
-            });
             
-            document.getElementById('userTable').innerHTML = list.map(u => {
-                const date = u.join_date ? new Date(u.join_date).toLocaleDateString('vi-VN') : '-';
-                const beltClass = getBeltColorClass(u.level);
-                let statusClass = 'bg-student';
-                if(u.status === 'Đã nghỉ') statusClass = 'bg-retired';
-                else if(u.status === 'Tập thử') statusClass = 'bg-yellow';
 
-                const userJson = JSON.stringify(u).replace(/"/g, "&quot;");
-
-                return `<tr>
-                    <td><b class="clickable-name" onclick='viewUserDetail(${userJson})'>${u.fullname}</b></td>
-                    <td><span class="badge bg-club">${u.club_name||'--'}</span></td>
-                    <td><span class="belt-badge ${beltClass}">${u.level || 'Đai trắng'}</span></td>
-                    <td>${date}</td>
-                    <td><span class="badge ${statusClass}">${u.status||'Chính thức'}</span></td>
-                    <td>
-                        <button class="btn btn-yellow" style="padding:4px 8px;" onclick="openEditMemberModal(${userJson})"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn btn-red" style="padding:4px 8px;" onclick="del('${API}/users/${u.id}', loadAllUsers)"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>`;
-            }).join('');
-        }
-
-        function openBulkModal() { document.getElementById('bulkNames').value=''; document.getElementById('bulkDate').value=new Date().toISOString().split('T')[0]; openModal('bulkModal'); }
-        async function saveBulkMembers() {
-            const namesText = document.getElementById('bulkNames').value;
-            const clubId = document.getElementById('bulkClubSelect').value;
-            if(!namesText.trim() || !clubId) return alert("Thiếu thông tin!");
-            
-            const names = namesText.split('\n').filter(n => n.trim() !== '');
-            const btn = document.querySelector('#bulkModal .btn-blue');
-            btn.innerText = "Đang xử lý..."; btn.disabled = true;
-
-            for (let name of names) {
-                const username = "user" + Math.floor(Math.random()*100000); 
-                await fetch(API + '/users', {
+            async function saveClub() {
+                await fetch(API + '/clubs', {
                     method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({ fullname: name.trim(), username: username, password: '123456', role: 'student', subject: 'Karate', club_id: clubId, join_date: document.getElementById('bulkDate').value, status: document.getElementById('bulkStatus').value, note: document.getElementById('bulkNote').value, level: 'Đai trắng' })
+                    body: JSON.stringify({ name: document.getElementById('newClubName').value, leader: document.getElementById('newClubLeader').value, phone: document.getElementById('newClubPhone').value })
                 });
+                closeModal('clubModal'); loadClubs();
             }
-            alert("Đã thêm xong!"); closeModal('bulkModal'); loadAllUsers(); btn.innerText = "Thêm mới"; btn.disabled = false;
-        }
 
-        // --- 5. BẢNG ĐIỂM ---
-        async function loadScores() {
-            await loadAllUsers(); 
-            const res = await fetch(API + '/scores'); 
-            allScores = await res.json();
-            filterScores();
-        }
+            function viewClubDetail(id, name, leader, phone) {
+                currentClubId = id;
+                document.getElementById('detailClubName').innerText = name;
+                document.getElementById('editClubName').value = name;
+                document.getElementById('editClubLeader').value = leader !== 'null' ? leader : '';
+                document.getElementById('editClubPhone').value = phone !== 'null' ? phone : '';
 
-        function filterScores() {
-            const filterClb = document.getElementById('filterScoreClub').value;
-            const list = allScores.filter(s => filterClb === "" || s.club_name === filterClb);
-            document.getElementById('scoreTable').innerHTML = list.map(s => {
-                const tb = (s.score_theory + s.score_practice) / 2;
-                return `<tr><td><b>${s.fullname}</b></td><td>${s.club_name||'--'}</td><td>${new Date(s.exam_date).toLocaleDateString()}</td><td>${s.score_theory}</td><td>${s.score_practice}</td><td style="color:blue;font-weight:bold">${tb.toFixed(1)}</td><td><button class="btn btn-red" onclick="del('${API}/scores/${s.id}', loadScores)">Xóa</button></td></tr>`;
-            }).join('');
-        }
+                document.getElementById('tab-clubs').classList.remove('active-section');
+                document.getElementById('club-detail-view').classList.add('active-section');
 
-        function openScoreModal() {
-            document.getElementById('scoreTheory').value=''; document.getElementById('scorePractice').value=''; document.getElementById('scoreDate').value=new Date().toISOString().split('T')[0];
-            filterStudentSelect(); 
-            openModal('scoreModal');
-        }
+                loadClubMembers(id);
+                loadClubFunds(id);
+            }
 
-        function filterStudentSelect() {
-            const cid = document.getElementById('scoreModalClubFilter').value;
-            const users = allUsers.filter(u => u.role==='student' && (cid==='' || u.club_id==cid));
-            document.getElementById('scoreStudentSelect').innerHTML = '<option value="">-- Chọn --</option>' + users.map(u=>`<option value="${u.id}">${u.fullname}</option>`).join('');
-        }
+            function backToClubList() {
+                document.getElementById('club-detail-view').classList.remove('active-section');
+                document.getElementById('tab-clubs').classList.add('active-section');
+                loadClubs();
+            }
 
-        async function saveScore() {
-            const uid = document.getElementById('scoreStudentSelect').value;
-            const theory = parseFloat(document.getElementById('scoreTheory').value);
-            const practice = parseFloat(document.getElementById('scorePractice').value);
-            if(!uid || isNaN(theory) || isNaN(practice)) return alert("Nhập đủ điểm!");
-            
-            await fetch(API+'/scores', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId:uid,subject:'Karate',theory:theory,practice:practice,date:document.getElementById('scoreDate').value})});
-            closeModal('scoreModal'); loadScores();
-        }
+            async function updateClubInfo() {
+                await fetch(API + '/clubs/' + currentClubId, {
+                    method: 'PUT', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ name: document.getElementById('editClubName').value, leader: document.getElementById('editClubLeader').value, phone: document.getElementById('editClubPhone').value })
+                });
+                alert("Đã cập nhật!");
+            }
 
-        // --- 6. QUẢN LÝ ĐĂNG KÝ (NÂNG CẤP) ---
-        async function loadRegistrations() {
-            const res = await fetch(API + '/registrations');
-            const data = await res.json();
-            window.allRegs = data; 
-            document.getElementById('regTable').innerHTML = data.map(r => {
-                let phone = r.phone || '';
-                let zaloLink = phone ? `https://zalo.me/${phone.startsWith('0')?'84'+phone.slice(1):phone}` : '#';
-                return `<tr>
-                    <td><b>${r.fullname}</b><br><small>${new Date(r.created_at).toLocaleDateString('vi-VN')}</small></td>
-                    <td>${r.phone}<br><a href="${zaloLink}" target="_blank" style="font-size:12px; color:#0d6efd">Chat Zalo</a></td>
-                    <td>${r.subject}</td><td>${r.location_name || '-'}</td>
-                    <td>
-                        <button class="btn btn-green" onclick="approveRegistration(${r.id})">Duyệt</button>
-                        <button class="btn btn-red" onclick="del('${API}/registrations/${r.id}', loadRegistrations)">Xóa</button>
-                    </td>
-                </tr>`;
-            }).join('');
-        }
+            async function loadClubMembers(id) {
+                const res = await fetch(`${API}/clubs/${id}/members`);
+                const data = await res.json();
+                
+                document.getElementById('detailMemberTable').innerHTML = data.map(u => {
+                    const joinDate = u.join_date ? new Date(u.join_date).toLocaleDateString('vi-VN') : '-';
+                    let badgeClass = 'bg-gray'; 
+                    const s = u.status || '';
+                    if(s.includes('buổi')) badgeClass = 'bg-student'; 
+                    else if(s === 'Tập thử') badgeClass = 'bg-yellow'; 
+                    else if(s === 'Đã nghỉ') badgeClass = 'bg-retired'; // Màu xám gạch ngang
+                    
+                    const userJson = JSON.stringify(u).replace(/"/g, "&quot;");
+                    const beltClass = getBeltColorClass(u.level);
 
-        // --- HÀM DUYỆT ĐĂNG KÝ (ĐÃ THÊM MỚI) ---
-        function approveRegistration(regId) {
-            const regData = window.allRegs.find(r => r.id === regId);
-            if (!regData) return;
-            openModal('userModal');
-            document.getElementById('userFullname').value = regData.fullname;
-            // Tự động tạo user từ số điện thoại, nếu không có thì random
-            document.getElementById('userUsername').value = regData.phone || `user${Math.floor(Math.random()*1000)}`;
-            pendingDeleteRegId = regId; // Đánh dấu ID cần xóa sau khi lưu xong
-        }
+                    return `
+                    <tr>
+                        <td style="font-weight:bold; color:#333;">${u.fullname}</td>
+                        <td><span class="belt-badge ${beltClass}" style="min-width:60px; font-size:11px;">${u.level||'Đai trắng'}</span></td>
+                        <td>${joinDate}</td>
+                        <td><span class="badge ${badgeClass}">${u.status || '1 buổi / tuần'}</span></td>
+                        <td>
+                            <button class="btn btn-yellow" style="padding:5px 10px;" onclick="openEditMemberModal(${userJson})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn btn-red" style="padding:5px 10px;" onclick="del('${API}/users/${u.id}', () => loadClubMembers(currentClubId))"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `}).join('');
+            }
 
-        function openAddMemberModal() {
-            if(!currentClubId) { alert("Lỗi ID CLB"); return; }
-            document.getElementById('memNames').value = '';
-            document.getElementById('memDate').value = new Date().toISOString().split('T')[0];
-            openModal('addMemModal');
-        }
+            function openEditMemberModal(u) {
+                document.getElementById('editMemId').value = u.id;
+                document.getElementById('editMemClubSelect').value = u.club_id || "";
+                document.getElementById('editMemName').value = u.fullname;
+                document.getElementById('editMemLevel').value = u.level || 'Đai trắng';
+                document.getElementById('editMemStatus').value = u.status || 'Chính thức';
+                document.getElementById('editMemNote').value = u.note || '';
+                
+                if(u.join_date) document.getElementById('editMemDate').value = new Date(u.join_date).toISOString().split('T')[0];
+                else document.getElementById('editMemDate').value = '';
+                
+                openModal('editMemberModal');
+            }
 
-        async function saveMemberToClub() {
-            const namesText = document.getElementById('memNames').value;
-            const names = namesText.split('\n').filter(n => n.trim() !== '');
-            const level = document.getElementById('memLevel').value;
-            // Lấy ngày từ ô input, nếu không chọn thì lấy ngày hôm nay
-            const joinDate = document.getElementById('memDate').value || new Date().toISOString().split('T')[0];
+            async function saveEditedMember() { 
+                const id = document.getElementById('editMemId').value;
+                const clubId = document.getElementById('editMemClubSelect').value;  
+                
+                const body = {
+                    fullname: document.getElementById('editMemName').value,
+                    join_date: document.getElementById('editMemDate').value,
+                    status: document.getElementById('editMemStatus').value,
+                    note: document.getElementById('editMemNote').value,
+                    level: document.getElementById('editMemLevel').value,
+                    club_id: clubId
+                };
 
-            if(names.length === 0) return alert("Vui lòng nhập ít nhất 1 tên!");
+                await fetch(API + '/users/' + id, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+                alert("Cập nhật thành công!");
+                closeModal('editMemberModal');
+                
+                if(document.getElementById('tab-users').classList.contains('active-section')) loadAllUsers();
+                else loadClubMembers(currentClubId);
+            } 
 
-            // Hiệu ứng nút bấm
-            const btn = document.querySelector('#addMemModal .btn-blue');
-            const originalText = btn.innerText;
-            btn.innerText = "Đang lưu..."; 
-            btn.disabled = true;
+            // --- HÀM THÊM USER (ĐÃ SỬA: Thêm Level & Xóa đăng ký cũ) ---
+            function openUserModal() { 
+                document.getElementById('userFullname').value=''; 
+                document.getElementById('userUsername').value=''; 
+                openModal('userModal'); 
+            }
 
-            for (let name of names) {
-                await fetch(API + '/users', {
-                    method: 'POST', 
-                    headers: {'Content-Type':'application/json'},
+            async function saveUser() {
+                const fullname = document.getElementById('userFullname').value;
+                const username = document.getElementById('userUsername').value || "user"+Math.floor(Math.random()*10000);
+                const pass = document.getElementById('userPass').value || "123456";
+                const role = document.getElementById('userRole').value;
+                const clubId = document.getElementById('userClubSelect').value;
+                const level = document.getElementById('userLevel').value; // Lấy màu đai
+
+                if(!fullname || !clubId) return alert("Vui lòng điền Tên và Chọn CLB!");
+
+                // 1. Gửi lên Server
+                const res = await fetch(API + '/users', {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({ 
-                        fullname: name.trim(), 
-                        username: "u" + Math.floor(Math.random()*1000000), // Random username tránh trùng
-                        password: '123', 
-                        role: 'student', 
-                        club_id: currentClubId, 
-                        level: level,
-                        join_date: joinDate, // Gửi ngày gia nhập
-                        status: 'Chính thức'
+                        fullname, username, password: pass, role, club_id: clubId, 
+                        level: level // Gửi level lên
                     })
                 });
+                const data = await res.json();
+
+                if(data.success) {
+                    // 2. Nếu đang Duyệt từ Đăng ký -> Xóa đơn đăng ký cũ
+                    if (pendingDeleteRegId) {
+                        await fetch(`${API}/registrations/${pendingDeleteRegId}`, { method: 'DELETE' });
+                        pendingDeleteRegId = null; // Reset
+                        loadRegistrations(); // Tải lại bảng đăng ký
+                    }
+
+                    alert("Thêm thành công!");
+                    closeModal('userModal'); 
+                    loadAllUsers();
+                } else {
+                    alert("Lỗi: " + (data.message || "Không thể lưu"));
+                }
             }
-            
-            // Reset lại nút và đóng modal
-            btn.innerText = originalText; 
-            btn.disabled = false;
-            closeModal('addMemModal'); 
-            loadClubMembers(currentClubId); // Tải lại danh sách
-        }
-        // --- HÀM XỬ LÝ ĐIỂM DANH ---
-    async function loadAttendance() {
-        const date = document.getElementById('attDate').value;
-        const clubId = document.getElementById('attClubFilter').value;
 
-        if(!date || !clubId) {
-            document.getElementById('attTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">Vui lòng chọn Ngày và Câu Lạc Bộ để bắt đầu điểm danh</td></tr>';
-            return;
-        }
-
-        const res = await fetch(`${API}/attendance?date=${date}&club_id=${clubId}`);
-        const data = await res.json();
-
-        if(data.length === 0) {
-            document.getElementById('attTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">CLB này hiện chưa có học viên nào đang theo học!</td></tr>';
-            return;
-        }
-
-        document.getElementById('attTable').innerHTML = data.map(u => {
-            const status = u.status || 'Có mặt'; // Mặc định là Có mặt nếu chưa từng điểm danh
-            const color = status === 'Vắng' ? 'red' : (status === 'Có phép' ? '#ff8c00' : 'green');
-            const beltClass = getBeltColorClass(u.level);
-
-            return `
-            <tr class="att-row" data-id="${u.user_id}">
-                <td style="font-weight:bold; font-size:15px;">${u.fullname}</td>
-                <td><span class="belt-badge ${beltClass}">${u.level || 'Đai trắng'}</span></td>
-                <td>
-                    <select class="att-status" style="width:100%; margin:0; font-weight:bold; color:${color}; border-color:${color};" onchange="this.style.color = this.options[this.selectedIndex].style.color; this.style.borderColor = this.options[this.selectedIndex].style.color;">
-                        <option value="Có mặt" style="color:green" ${status==='Có mặt'?'selected':''}>Có mặt</option>
-                        <option value="Có phép" style="color:#ff8c00" ${status==='Có phép'?'selected':''}>Có phép</option>
-                        <option value="Vắng" style="color:red" ${status==='Vắng'?'selected':''}>Vắng không phép</option>
-                    </select>
-                </td>
-                <td><input type="text" class="att-note" value="${u.note || ''}" placeholder="Nhập lý do vắng..." style="margin:0; width:100%;"></td>
-            </tr>`;
-        }).join('');
-    }
-
-    async function saveAttendance() {
-        const date = document.getElementById('attDate').value;
-        const rows = document.querySelectorAll('.att-row');
-
-        if(!date) return alert("Vui lòng chọn ngày!");
-        if(rows.length === 0) return alert("Chưa có danh sách để lưu!");
-
-        const records = [];
-        rows.forEach(row => {
-            records.push({
-                user_id: row.getAttribute('data-id'),
-                status: row.querySelector('.att-status').value,
-                note: row.querySelector('.att-note').value
-            });
-        });
-
-        const btn = document.querySelector('#tab-attendance .btn-green');
-        btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang lưu..."; 
-        btn.disabled = true;
-
-        try {
-            const res = await fetch(API + '/attendance', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ date, records })
-            });
-            const result = await res.json();
-
-            if(result.success) {
-                alert("✅ Đã lưu danh sách điểm danh thành công!");
-            } else {
-                alert("❌ Lỗi khi lưu dữ liệu!");
+            // --- QUỸ ---
+            async function loadClubFunds(id) {
+                const res = await fetch(`${API}/clubs/${id}/funds`);
+                const data = await res.json();
+                let bal = 0;
+                document.getElementById('fundTable').innerHTML = data.map(f => {
+                    bal += parseFloat(f.amount);
+                    const isThu = f.type === 'thu';
+                    return `<tr><td>${new Date(f.created_at).toLocaleDateString()}</td><td>${f.description}</td><td><span class="${isThu?'money-plus':'money-minus'}">${isThu?'THU':'CHI'}</span></td><td class="${isThu?'money-plus':'money-minus'}">${parseInt(f.amount).toLocaleString()}</td><td><button class="btn btn-gray" onclick="del('${API}/funds/${f.id}', () => loadClubFunds(currentClubId))">X</button></td></tr>`;
+                }).join('');
+                document.getElementById('fundBalance').innerText = bal.toLocaleString() + ' VNĐ';
             }
-        } catch(e) {
-            alert("❌ Lỗi kết nối đến máy chủ!");
-        }
 
-        btn.innerHTML = '<i class="fa-solid fa-save"></i> Lưu Điểm Danh';
-        btn.disabled = false;
-    }
-    // --- XEM CHI TIẾT HỌC VIÊN VÀ LỊCH SỬ ĐIỂM DANH ---
-        function viewUserDetail(u) {
-            // 1. Ẩn các tab khác, hiện tab chi tiết
-            document.querySelectorAll('.section').forEach(e => e.classList.remove('active-section'));
-            document.getElementById('user-detail-view').classList.add('active-section');
+            function openFundModal() { 
+                if(!currentClubId) return alert("Lỗi ID CLB");
+                document.getElementById('fundDesc').value = ''; document.getElementById('fundAmount').value = '';
+                openModal('fundModal'); 
+            }
 
-            // 2. Điền thông tin cá nhân
-            document.getElementById('detailUserName').innerText = u.fullname;
-            document.getElementById('detailUserClub').innerText = u.club_name || 'Chưa xếp lớp';
-            document.getElementById('detailUserLevel').innerHTML = `<span class="belt-badge ${getBeltColorClass(u.level)}">${u.level || 'Đai trắng'}</span>`;
-            document.getElementById('detailUserJoinDate').innerText = u.join_date ? new Date(u.join_date).toLocaleDateString('vi-VN') : '--';
-            
-            let statusClass = 'bg-student';
-            if(u.status === 'Đã nghỉ') statusClass = 'bg-retired';
-            else if(u.status === 'Tập thử') statusClass = 'bg-yellow';
-            document.getElementById('detailUserStatus').innerHTML = `<span class="badge ${statusClass}">${u.status || 'Chính thức'}</span>`;
+            async function saveFund() {
+                await fetch(API + '/funds', {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ club_id: currentClubId, type: document.getElementById('fundType').value, description: document.getElementById('fundDesc').value, amount: document.getElementById('fundAmount').value })
+                });
+                closeModal('fundModal'); loadClubFunds(currentClubId);
+            }
 
-            // 3. Tải lịch sử điểm danh
-            loadUserAttendance(u.id);
-        }
+            // --- 4. HỌC VIÊN ---
+            async function loadAllUsers() {
+                await loadClubs(); 
+                const res = await fetch(API + '/users');
+                allUsers = await res.json();
+                filterUsers();
+            }
 
-        function backToUserList() {
-            document.getElementById('user-detail-view').classList.remove('active-section');
-            document.getElementById('tab-users').classList.add('active-section');
-        }
+            function filterUsers() {
+                const kw = document.getElementById('searchUser').value.toLowerCase();
+                const clb = document.getElementById('filterClub').value;
+                const level = document.getElementById('filterLevel').value;
+                const statusFilter = document.getElementById('filterStatus').value;
 
-        async function loadUserAttendance(userId) {
-            const res = await fetch(`${API}/users/${userId}/attendance`);
-            const data = await res.json();
-            
-            const tbody = document.getElementById('detailUserAttTable');
-            
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Học viên này chưa có dữ liệu điểm danh nào.</td></tr>';
+                const list = allUsers.filter(u => {
+                    const uClub = u.club_name || "";
+                    const uLevel = u.level || "Đai trắng";
+                    const uStatus = u.status || "";
+
+                    const matchKw = (u.fullname.toLowerCase().includes(kw) || u.username.includes(kw));
+                    const matchClub = (clb === "" || uClub === clb);
+                    const matchLevel = (level === "" || uLevel === level);
+                    // Logic lọc trạng thái: 
+                    // Nếu chọn "Đã nghỉ" -> Chỉ hiện người đã nghỉ
+                    // Nếu chọn "Đang tập" -> Hiện tất cả TRỪ người đã nghỉ
+                    // Nếu không chọn gì -> Hiện tất cả
+                    let matchStatus = true;
+                    if(statusFilter === "Đã nghỉ") matchStatus = (uStatus === "Đã nghỉ");
+                    else if(statusFilter === "Đang tập") matchStatus = (uStatus !== "Đã nghỉ");
+
+                    return matchKw && matchClub && matchLevel && matchStatus;
+                });
+                
+                document.getElementById('userTable').innerHTML = list.map(u => {
+                    const date = u.join_date ? new Date(u.join_date).toLocaleDateString('vi-VN') : '-';
+                    const beltClass = getBeltColorClass(u.level);
+                    let statusClass = 'bg-student';
+                    if(u.status === 'Đã nghỉ') statusClass = 'bg-retired';
+                    else if(u.status === 'Tập thử') statusClass = 'bg-yellow';
+
+                    const userJson = JSON.stringify(u).replace(/"/g, "&quot;");
+
+                    return `<tr>
+                        <td><b class="clickable-name" onclick='viewUserDetail(${userJson})'>${u.fullname}</b></td>
+                        <td><span class="badge bg-club">${u.club_name||'--'}</span></td>
+                        <td><span class="belt-badge ${beltClass}">${u.level || 'Đai trắng'}</span></td>
+                        <td>${date}</td>
+                        <td><span class="badge ${statusClass}">${u.status||'Chính thức'}</span></td>
+                        <td>
+                            <button class="btn btn-yellow" style="padding:4px 8px;" onclick="openEditMemberModal(${userJson})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn btn-red" style="padding:4px 8px;" onclick="del('${API}/users/${u.id}', loadAllUsers)"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            }
+
+            function openBulkModal() { document.getElementById('bulkNames').value=''; document.getElementById('bulkDate').value=new Date().toISOString().split('T')[0]; openModal('bulkModal'); }
+            async function saveBulkMembers() {
+                const namesText = document.getElementById('bulkNames').value;
+                const clubId = document.getElementById('bulkClubSelect').value;
+                if(!namesText.trim() || !clubId) return alert("Thiếu thông tin!");
+                
+                const names = namesText.split('\n').filter(n => n.trim() !== '');
+                const btn = document.querySelector('#bulkModal .btn-blue');
+                btn.innerText = "Đang xử lý..."; btn.disabled = true;
+
+                for (let name of names) {
+                    const username = "user" + Math.floor(Math.random()*100000); 
+                    await fetch(API + '/users', {
+                        method: 'POST', headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({ fullname: name.trim(), username: username, password: '123456', role: 'student', subject: 'Karate', club_id: clubId, join_date: document.getElementById('bulkDate').value, status: document.getElementById('bulkStatus').value, note: document.getElementById('bulkNote').value, level: 'Đai trắng' })
+                    });
+                }
+                alert("Đã thêm xong!"); closeModal('bulkModal'); loadAllUsers(); btn.innerText = "Thêm mới"; btn.disabled = false;
+            }
+
+            // --- 5. BẢNG ĐIỂM ---
+            async function loadScores() {
+                await loadAllUsers(); 
+                const res = await fetch(API + '/scores'); 
+                allScores = await res.json();
+                filterScores();
+            }
+
+            function filterScores() {
+                const filterClb = document.getElementById('filterScoreClub').value;
+                const list = allScores.filter(s => filterClb === "" || s.club_name === filterClb);
+                document.getElementById('scoreTable').innerHTML = list.map(s => {
+                    const tb = (s.score_theory + s.score_practice) / 2;
+                    return `<tr><td><b>${s.fullname}</b></td><td>${s.club_name||'--'}</td><td>${new Date(s.exam_date).toLocaleDateString()}</td><td>${s.score_theory}</td><td>${s.score_practice}</td><td style="color:blue;font-weight:bold">${tb.toFixed(1)}</td><td><button class="btn btn-red" onclick="del('${API}/scores/${s.id}', loadScores)">Xóa</button></td></tr>`;
+                }).join('');
+            }
+
+            function openScoreModal() {
+                document.getElementById('scoreTheory').value=''; document.getElementById('scorePractice').value=''; document.getElementById('scoreDate').value=new Date().toISOString().split('T')[0];
+                filterStudentSelect(); 
+                openModal('scoreModal');
+            }
+
+            function filterStudentSelect() {
+                const cid = document.getElementById('scoreModalClubFilter').value;
+                const users = allUsers.filter(u => u.role==='student' && (cid==='' || u.club_id==cid));
+                document.getElementById('scoreStudentSelect').innerHTML = '<option value="">-- Chọn --</option>' + users.map(u=>`<option value="${u.id}">${u.fullname}</option>`).join('');
+            }
+
+            async function saveScore() {
+                const uid = document.getElementById('scoreStudentSelect').value;
+                const theory = parseFloat(document.getElementById('scoreTheory').value);
+                const practice = parseFloat(document.getElementById('scorePractice').value);
+                if(!uid || isNaN(theory) || isNaN(practice)) return alert("Nhập đủ điểm!");
+                
+                await fetch(API+'/scores', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({userId:uid,subject:'Karate',theory:theory,practice:practice,date:document.getElementById('scoreDate').value})});
+                closeModal('scoreModal'); loadScores();
+            }
+
+            // --- 6. QUẢN LÝ ĐĂNG KÝ (NÂNG CẤP) ---
+            async function loadRegistrations() {
+                const res = await fetch(API + '/registrations');
+                const data = await res.json();
+                window.allRegs = data; 
+                document.getElementById('regTable').innerHTML = data.map(r => {
+                    let phone = r.phone || '';
+                    let zaloLink = phone ? `https://zalo.me/${phone.startsWith('0')?'84'+phone.slice(1):phone}` : '#';
+                    return `<tr>
+                        <td><b>${r.fullname}</b><br><small>${new Date(r.created_at).toLocaleDateString('vi-VN')}</small></td>
+                        <td>${r.phone}<br><a href="${zaloLink}" target="_blank" style="font-size:12px; color:#0d6efd">Chat Zalo</a></td>
+                        <td>${r.subject}</td><td>${r.location_name || '-'}</td>
+                        <td>
+                            <button class="btn btn-green" onclick="approveRegistration(${r.id})">Duyệt</button>
+                            <button class="btn btn-red" onclick="del('${API}/registrations/${r.id}', loadRegistrations)">Xóa</button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            }
+
+            // --- HÀM DUYỆT ĐĂNG KÝ (ĐÃ THÊM MỚI) ---
+            function approveRegistration(regId) {
+                const regData = window.allRegs.find(r => r.id === regId);
+                if (!regData) return;
+                openModal('userModal');
+                document.getElementById('userFullname').value = regData.fullname;
+                // Tự động tạo user từ số điện thoại, nếu không có thì random
+                document.getElementById('userUsername').value = regData.phone || `user${Math.floor(Math.random()*1000)}`;
+                pendingDeleteRegId = regId; // Đánh dấu ID cần xóa sau khi lưu xong
+            }
+
+            function openAddMemberModal() {
+                if(!currentClubId) { alert("Lỗi ID CLB"); return; }
+                document.getElementById('memNames').value = '';
+                document.getElementById('memDate').value = new Date().toISOString().split('T')[0];
+                openModal('addMemModal');
+            }
+
+            async function saveMemberToClub() {
+                const namesText = document.getElementById('memNames').value;
+                const names = namesText.split('\n').filter(n => n.trim() !== '');
+                const level = document.getElementById('memLevel').value;
+                // Lấy ngày từ ô input, nếu không chọn thì lấy ngày hôm nay
+                const joinDate = document.getElementById('memDate').value || new Date().toISOString().split('T')[0];
+
+                if(names.length === 0) return alert("Vui lòng nhập ít nhất 1 tên!");
+
+                // Hiệu ứng nút bấm
+                const btn = document.querySelector('#addMemModal .btn-blue');
+                const originalText = btn.innerText;
+                btn.innerText = "Đang lưu..."; 
+                btn.disabled = true;
+
+                for (let name of names) {
+                    await fetch(API + '/users', {
+                        method: 'POST', 
+                        headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({ 
+                            fullname: name.trim(), 
+                            username: "u" + Math.floor(Math.random()*1000000), // Random username tránh trùng
+                            password: '123', 
+                            role: 'student', 
+                            club_id: currentClubId, 
+                            level: level,
+                            join_date: joinDate, // Gửi ngày gia nhập
+                            status: 'Chính thức'
+                        })
+                    });
+                }
+                
+                // Reset lại nút và đóng modal
+                btn.innerText = originalText; 
+                btn.disabled = false;
+                closeModal('addMemModal'); 
+                loadClubMembers(currentClubId); // Tải lại danh sách
+            }
+            // --- HÀM XỬ LÝ ĐIỂM DANH ---
+        async function loadAttendance() {
+            const date = document.getElementById('attDate').value;
+            const clubId = document.getElementById('attClubFilter').value;
+
+            if(!date || !clubId) {
+                document.getElementById('attTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">Vui lòng chọn Ngày và Câu Lạc Bộ để bắt đầu điểm danh</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = data.map(a => {
-                const dateObj = new Date(a.date);
-                const dateStr = dateObj.toLocaleDateString('vi-VN');
-                const color = a.status === 'Vắng' ? 'red' : (a.status === 'Có phép' ? '#ff8c00' : 'green');
-                
+            const res = await fetch(`${API}/attendance?date=${date}&club_id=${clubId}`);
+            const data = await res.json();
+
+            if(data.length === 0) {
+                document.getElementById('attTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">CLB này hiện chưa có học viên nào đang theo học!</td></tr>';
+                return;
+            }
+
+            document.getElementById('attTable').innerHTML = data.map(u => {
+                const status = u.status || 'Có mặt'; // Mặc định là Có mặt nếu chưa từng điểm danh
+                const color = status === 'Vắng' ? 'red' : (status === 'Có phép' ? '#ff8c00' : 'green');
+                const beltClass = getBeltColorClass(u.level);
+
                 return `
-                <tr>
-                    <td style="font-weight:bold;">${dateStr}</td>
-                    <td><span style="color:${color}; font-weight:bold; padding: 4px 8px; border: 1px solid ${color}; border-radius: 4px;">${a.status}</span></td>
-                    <td style="color:#555; font-style:italic;">${a.note || '--'}</td>
+                <tr class="att-row" data-id="${u.user_id}">
+                    <td style="font-weight:bold; font-size:15px;">${u.fullname}</td>
+                    <td><span class="belt-badge ${beltClass}">${u.level || 'Đai trắng'}</span></td>
+                    <td>
+                        <select class="att-status" style="width:100%; margin:0; font-weight:bold; color:${color}; border-color:${color};" onchange="this.style.color = this.options[this.selectedIndex].style.color; this.style.borderColor = this.options[this.selectedIndex].style.color;">
+                            <option value="Có mặt" style="color:green" ${status==='Có mặt'?'selected':''}>Có mặt</option>
+                            <option value="Có phép" style="color:#ff8c00" ${status==='Có phép'?'selected':''}>Có phép</option>
+                            <option value="Vắng" style="color:red" ${status==='Vắng'?'selected':''}>Vắng không phép</option>
+                        </select>
+                    </td>
+                    <td><input type="text" class="att-note" value="${u.note || ''}" placeholder="Nhập lý do vắng..." style="margin:0; width:100%;"></td>
                 </tr>`;
             }).join('');
         }
-        // START
-        loadClubs();
-    </script>
-</body>
-</html>
+
+        async function saveAttendance() {
+            const date = document.getElementById('attDate').value;
+            const rows = document.querySelectorAll('.att-row');
+
+            if(!date) return alert("Vui lòng chọn ngày!");
+            if(rows.length === 0) return alert("Chưa có danh sách để lưu!");
+
+            const records = [];
+            rows.forEach(row => {
+                records.push({
+                    user_id: row.getAttribute('data-id'),
+                    status: row.querySelector('.att-status').value,
+                    note: row.querySelector('.att-note').value
+                });
+            });
+
+            const btn = document.querySelector('#tab-attendance .btn-green');
+            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang lưu..."; 
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(API + '/attendance', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ date, records })
+                });
+                const result = await res.json();
+
+                if(result.success) {
+                    alert("✅ Đã lưu danh sách điểm danh thành công!");
+                } else {
+                    alert("❌ Lỗi khi lưu dữ liệu!");
+                }
+            } catch(e) {
+                alert("❌ Lỗi kết nối đến máy chủ!");
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-save"></i> Lưu Điểm Danh';
+            btn.disabled = false;
+        }
+        // --- XEM CHI TIẾT HỌC VIÊN VÀ LỊCH SỬ ĐIỂM DANH ---
+            function viewUserDetail(u) {
+                // 1. Ẩn các tab khác, hiện tab chi tiết
+                document.querySelectorAll('.section').forEach(e => e.classList.remove('active-section'));
+                document.getElementById('user-detail-view').classList.add('active-section');
+
+                // 2. Điền thông tin cá nhân
+                document.getElementById('detailUserName').innerText = u.fullname;
+                document.getElementById('detailUserClub').innerText = u.club_name || 'Chưa xếp lớp';
+                document.getElementById('detailUserLevel').innerHTML = `<span class="belt-badge ${getBeltColorClass(u.level)}">${u.level || 'Đai trắng'}</span>`;
+                document.getElementById('detailUserJoinDate').innerText = u.join_date ? new Date(u.join_date).toLocaleDateString('vi-VN') : '--';
+                
+                let statusClass = 'bg-student';
+                if(u.status === 'Đã nghỉ') statusClass = 'bg-retired';
+                else if(u.status === 'Tập thử') statusClass = 'bg-yellow';
+                document.getElementById('detailUserStatus').innerHTML = `<span class="badge ${statusClass}">${u.status || 'Chính thức'}</span>`;
+
+                // 3. Tải lịch sử điểm danh
+                loadUserAttendance(u.id);
+            }
+
+            function backToUserList() {
+                document.getElementById('user-detail-view').classList.remove('active-section');
+                document.getElementById('tab-users').classList.add('active-section');
+            }
+
+            async function loadUserAttendance(userId) {
+                const res = await fetch(`${API}/users/${userId}/attendance`);
+                const data = await res.json();
+                
+                const tbody = document.getElementById('detailUserAttTable');
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">Học viên này chưa có dữ liệu điểm danh nào.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(a => {
+                    const dateObj = new Date(a.date);
+                    const dateStr = dateObj.toLocaleDateString('vi-VN');
+                    const color = a.status === 'Vắng' ? 'red' : (a.status === 'Có phép' ? '#ff8c00' : 'green');
+                    
+                    return `
+                    <tr>
+                        <td style="font-weight:bold;">${dateStr}</td>
+                        <td><span style="color:${color}; font-weight:bold; padding: 4px 8px; border: 1px solid ${color}; border-radius: 4px;">${a.status}</span></td>
+                        <td style="color:#555; font-style:italic;">${a.note || '--'}</td>
+                    </tr>`;
+                }).join('');
+            }
+            // START
+            loadClubs();
+        </script>
+    </body>
+    </html>
