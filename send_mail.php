@@ -15,18 +15,27 @@ if ($secret_received !== $secret_key) {
     ]));
 }
 
-// ... đoạn code gửi mail tiếp theo giữ nguyên ...
-$email = $_POST['email'];
+$to = $_POST['email'];
 $newPass = $_POST['newpass'];
 $fullname = $_POST['fullname'];
 
-$subject = "Khoi phuc mat khau - Karate Tri Duc";
-$message = "Mat khau moi cua ban la: $newPass";
-$headers = "From: noreply@nangkhieutriduc.com";
+$subject = "=?UTF-8?B?".base64_encode("Mật khẩu mới - Karate Trí Đức")."?=";
+$message = "Xin chào $fullname,\n\nMật khẩu mới của bạn là: $newPass\n\nVui lòng đăng nhập lại.";
 
-if(mail($email, $subject, $message, $headers)) {
+// Thêm đầy đủ thông tin gửi để Hosting không chặn
+$headers = "MIME-Version: 1.0" . "\r\n";
+$headers .= "Content-type:text/plain;charset=UTF-8" . "\r\n";
+$headers .= "From: CLB Karate Tri Duc <noreply@nangkhieutriduc.com>" . "\r\n";
+$headers .= "Reply-To: noreply@nangkhieutriduc.com" . "\r\n";
+$headers .= "X-Mailer: PHP/" . phpversion();
+
+if(mail($to, $subject, $message, $headers)) {
     echo json_encode(['success' => true]);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Hosting chặn hàm mail()']);
+    // Đoạn này giúp mình xem lỗi cụ thể là gì
+    $error = error_get_last();
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Hosting chặn hàm mail. Chi tiết: ' . ($error['message'] ?? 'Không có thông báo lỗi')
+    ]);
 }
-?>
