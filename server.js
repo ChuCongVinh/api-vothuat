@@ -233,26 +233,73 @@ app.post('/api/tournament/start', upload.single('file'), (req, res) => {
         console.log(`✅ Đã đọc được ${players.length} VĐV. Đang tạo sơ đồ...`);
         players.sort(() => Math.random() - 0.5);
         
-        let totalSlots = 1; while(totalSlots < players.length) totalSlots *= 2;
+        let totalSlots = 1; 
+        while(totalSlots < players.length) totalSlots *= 2;
 
-        const matches = [];
+        // Dùng object để lưu tạm các vòng đấu, dễ dàng đẩy người "Vào thẳng" sang vòng sau
+        let roundsData = { 1: [] };
         
+        // --- TẠO VÒNG 1 ---
         for (let i = 0; i < totalSlots / 2; i++) {
             const p1 = players[i];
             const p2 = players[totalSlots - 1 - i];
-            let winner = (!p2 && p1) ? p1.name : null;
-            let status = winner ? 'finished' : 'pending';
-            matches.push([p1 ? p1.name : null, p2 ? p2.name : null, p1 ? p1.team : '', p2 ? p2.team : '', 1, winner, status, 0, 0]);
+            
+            // Nếu không có p2, p1 được vào thẳng (Bye)
+            let isBye = (!p2 && p1);
+            let winner = isBye ? p1.name : null;
+            let status = isBye ? 'finished' : 'pending';
+            let winnerTeam = isBye ? p1.team : null;
+
+            roundsData[1].push({
+                p1: p1 ? p1.name : null, 
+                p2: p2 ? p2.name : null, 
+                team1: p1 ? p1.team : '', 
+                team2: p2 ? p2.team : '', 
+                round: 1, 
+                winner: winner, 
+                status: status, 
+                score1: 0, 
+                score2: 0,
+                winnerTeam: winnerTeam // Lưu tạm thông tin team để đẩy sang vòng 2
+            });
         }
 
+        // --- TẠO CÁC VÒNG TIẾP THEO ---
         let currentRoundMatches = totalSlots / 2;
         let round = 2;
+        
         while (currentRoundMatches > 1) {
             currentRoundMatches /= 2;
+            roundsData[round] = [];
+            
             for (let j = 0; j < currentRoundMatches; j++) {
-                matches.push([null, null, '', '', round, null, 'pending', 0, 0]);
+                // Nhìn lại kết quả từ 2 trận của vòng trước đó
+                let prevMatch1 = roundsData[round - 1][j * 2];
+                let prevMatch2 = roundsData[round - 1][j * 2 + 1];
+
+                // Nếu vòng trước có người thắng (do được Vào thẳng), bê nguyên tên thả vào đây
+                let p1 = prevMatch1.winner;
+                let team1 = prevMatch1.winnerTeam || '';
+                
+                let p2 = prevMatch2.winner;
+                let team2 = prevMatch2.winnerTeam || '';
+
+                roundsData[round].push({
+                    p1: p1, p2: p2, 
+                    team1: team1, team2: team2, 
+                    round: round, winner: null, status: 'pending', 
+                    score1: 0, score2: 0, winnerTeam: null
+                });
             }
             round++;
+        }
+
+        // --- CHUYỂN DỮ LIỆU THÀNH MẢNG ĐỂ LƯU VÀO DATABASE ---
+        const matches = [];
+        for (let r = 1; r < round; r++) {
+            roundsData[r].forEach(m => {
+                matches.push([m.p1, m.p2, m.team1, m.team2, m.round, m.winner, m.status, m.score1, m.score2]);
+            });
         }
 
         db.query("TRUNCATE TABLE matches", (err) => {
