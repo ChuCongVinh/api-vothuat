@@ -1,4 +1,4 @@
-const API = 'https://api-vothuat.onrender.com/api';
+const API_URL = 'https://api-vothuat.onrender.com/api';
 
 // 1. Hàm chạy ngay khi web tải xong
 document.addEventListener('DOMContentLoaded', () => {
