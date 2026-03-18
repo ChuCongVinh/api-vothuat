@@ -15,47 +15,28 @@ app.use(express.static(path.join(__dirname, 'frontend')));
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ============================================================
-// 1. KẾT NỐI DATABASE (CHẾ ĐỘ TỰ ĐỘNG HỒI SINH)
 // ============================================================
-const db_config = {
+// 1. KẾT NỐI DATABASE (CHẾ ĐỘ POOL BẤT TỬ)
+// ============================================================
+const db = mysql.createPool({
     host: '202.92.4.66', 
     user: 'jxcjzqgbhosting_Chucongvinh2004', 
     password: 'Chucongvinh2004@', 
-    database: 'jxcjzqgbhosting_nangkhieuTriDuc'
-};
+    database: 'jxcjzqgbhosting_nangkhieuTriDuc',
+    waitForConnections: true,
+    connectionLimit: 10,  // Tự động duy trì 10 sợi cáp cùng lúc
+    queueLimit: 0         // Xếp hàng lệnh không giới hạn nếu cáp bận
+});
 
-
-
-
-let db;
-
-function handleDisconnect() {
-    db = mysql.createConnection(db_config); // Tạo kết nối mới
-
-    db.connect(function(err) {
-        if(err) {
-            console.log('❌ Lỗi khi kết nối Database:', err);
-            setTimeout(handleDisconnect, 2000); // Nếu lỗi, đợi 2 giây tự thử lại
-        } else {
-            console.log('✅ Đã kết nối MySQL thành công (Chế độ tự hồi sinh)!');
-        }
-    });
-
-    // Hệ thống lá chắn: Bắt mọi lỗi văng ra để web KHÔNG BỊ SẬP
-    db.on('error', function(err) {
-        console.log('⚠️ Phát hiện lỗi Database:', err.code);
-        if(err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ECONNRESET') {
-            console.log('🔄 Cáp bị đứt, đang tự động nối lại...');
-            handleDisconnect(); // Gọi lại hàm để tự kết nối mới
-        } else {
-            throw err;
-        }
-    });
-}
-
-// Khởi động bộ máy kết nối
-handleDisconnect();
-
+// Test thử xem Bó cáp (Pool) đã thông chưa
+db.getConnection((err, connection) => {
+    if (err) {
+        console.error('❌ Lỗi khi khởi tạo Pool Database:', err.code);
+    } else {
+        console.log('✅ Đã kết nối MySQL thành công (Chế độ Pool Bất Tử)!');
+        connection.release(); // Test xong thì nhả cáp ra cho thằng khác dùng
+    }
+});
 // ============================================================
 // 2. API QUẢN LÝ CÂU LẠC BỘ (CLUBS)
 // ============================================================
