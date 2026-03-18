@@ -291,6 +291,7 @@
         loadBracket();
         setInterval(loadBracket, 5000);
         // --- HÀM XUẤT PDF MỚI THÊM ---
+        // --- HÀM XUẤT PDF (PHIÊN BẢN NÂNG CẤP BẮT LỖI) ---
         function exportToPDF() {
             const btn = document.querySelector('button[onclick="exportToPDF()"]');
             const originalText = btn.innerHTML;
@@ -299,16 +300,21 @@
 
             const element = document.getElementById('exportArea');
             
-            // Cấu hình xuất PDF (Dùng khổ A3 nằm ngang để sơ đồ rộng không bị nát)
             const opt = {
                 margin:       0.5,
                 filename:     'So-Do-Thi-Dau-Karate.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true }, // scale: 2 giúp ảnh nét gấp đôi
+                html2canvas:  { scale: 2, useCORS: true, logging: true }, // Bật theo dõi
                 jsPDF:        { unit: 'in', format: 'a3', orientation: 'landscape' }
             };
 
+            // Tiến hành xuất và bắt lỗi nếu có
             html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }).catch(err => {
+                console.error("❌ Lỗi xuất PDF:", err);
+                alert("Có lỗi khi tạo PDF! Hãy nhấn F12 và xem tab Console.");
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             });
