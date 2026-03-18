@@ -60,7 +60,8 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     const subject = document.getElementById('userSubject').value; // <--- Lấy thêm cái này
 
     try {
-        const res = await fetch('https://nangkhieutriduc.com/api/register', {
+        // --- SỬA QUAN TRỌNG: GỌI ĐÚNG API /api/register (TRÊN RENDER) ---
+        const res = await fetch('https://api-vothuat.onrender.com/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, phone, locationId, subject }) // <--- Gửi thêm subject

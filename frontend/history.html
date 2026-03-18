@@ -98,7 +98,8 @@
         // 1. Tải bảng huy chương
         async function loadMedals() {
             try {
-                const res = await fetch('https://nangkhieutriduc.com/api/tournament/medals');
+                // ĐÃ THAY ĐỔI LINK TẠI ĐÂY:
+                const res = await fetch('https://api-vothuat.onrender.com/api/tournament/medals');
                 const data = await res.json();
                 const tbody = document.getElementById('medalTableBody');
                 tbody.innerHTML = '';

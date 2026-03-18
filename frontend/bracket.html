@@ -122,10 +122,19 @@
 </head>
 <body>
 
-    <div class="header">
-        <h1>SƠ ĐỒ THI ĐẤU TOÀN GIẢI</h1>
-    </div>
+    <button onclick="exportToPDF()" style="position: fixed; top: 20px; left: 20px; background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+        <i class="fa-solid fa-file-pdf"></i> Tải Sơ Đồ PDF
+    </button>
 
+    <div id="exportArea" style="background: white; padding: 20px;">
+        <div class="header">
+            <h1 style="margin-top: 20px;">SƠ ĐỒ THI ĐẤU TOÀN GIẢI</h1>
+        </div>
+        
+        <div id="bracketContainer" style="min-height: 300px; display:flex; justify-content:center; align-items:center;">
+            Loading...
+        </div>
+    </div>
     <div class="instruction-panel">
         <h3><i class="fa-solid fa-circle-info"></i> HƯỚNG DẪN</h3>
         <div class="step-row">
@@ -142,10 +151,6 @@
                 tại cặp đấu để bắt đầu. Khi xong sẽ hiện <strong style="background:#6c757d; color:white; padding:2px 5px; border-radius:3px; font-size:0.7rem;">ĐÃ THI ĐẤU</strong> và điểm số.
             </div>
         </div>
-    </div>
-
-    <div id="bracketContainer" style="min-height: 300px; display:flex; justify-content:center; align-items:center;">
-        Loading...
     </div>
 
     <a href="tournament_hub.html" class="nav-btn"><i class="fa-solid fa-arrow-left"></i> Khu Vực Giải Đấu</a>
@@ -285,6 +290,29 @@
 
         loadBracket();
         setInterval(loadBracket, 5000);
+        // --- HÀM XUẤT PDF MỚI THÊM ---
+        function exportToPDF() {
+            const btn = document.querySelector('button[onclick="exportToPDF()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tạo PDF...';
+            btn.disabled = true;
+
+            const element = document.getElementById('exportArea');
+            
+            // Cấu hình xuất PDF (Dùng khổ A3 nằm ngang để sơ đồ rộng không bị nát)
+            const opt = {
+                margin:       0.5,
+                filename:     'So-Do-Thi-Dau-Karate.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true }, // scale: 2 giúp ảnh nét gấp đôi
+                jsPDF:        { unit: 'in', format: 'a3', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
     </script>
 </body>
 </html>

@@ -65,8 +65,8 @@
             btn.disabled = true;
 
             try {
-                // --- SỬA QUAN TRỌNG: GỌI ĐÚNG API /api/users ---
-                const res = await fetch('https://nangkhieutriduc.com/api/users', {
+                // --- SỬA QUAN TRỌNG: GỌI ĐÚNG API /api/users (TRÊN RENDER) ---
+                const res = await fetch('https://api-vothuat.onrender.com/api/users', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 

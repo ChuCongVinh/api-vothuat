@@ -302,16 +302,19 @@ app.post('/api/tournament/start', upload.single('file'), (req, res) => {
             });
         }
 
+        // --- ĐOẠN CODE ĐÃ ĐƯỢC NÂNG CẤP ĐỂ BÁO CÁO RÕ LỖI ---
         db.query("TRUNCATE TABLE matches", (err) => {
             if (err) {
                 console.error("Lỗi xóa DB:", err);
-                return res.json({ success: false, message: "Lỗi Database" });
+                // In thẳng lỗi của MySQL ra popup để dễ sửa
+                return res.json({ success: false, message: "Lỗi dọn bảng cũ: " + err.message });
             }
+            
             const sql = "INSERT INTO matches (p1, p2, team1, team2, round, winner, status, score1, score2) VALUES ?";
             db.query(sql, [matches], (err) => {
                 if (err) {
                     console.error("Lỗi Insert:", err);
-                    return res.json({ success: false });
+                    return res.json({ success: false, message: "Lỗi thêm sơ đồ mới: " + err.message });
                 }
                 console.log("✅ Tạo sơ đồ thành công!");
                 res.json({ success: true });
