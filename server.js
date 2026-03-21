@@ -14,27 +14,30 @@ app.use(express.static(path.join(__dirname, 'frontend')));
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// ============================================================
-// ============================================================
-// 1. KẾT NỐI DATABASE (CHẾ ĐỘ POOL BẤT TỬ)
+// 1. KẾT NỐI DATABASE (CHẾ ĐỘ CLOUD BẤT TỬ - TIDB)
 // ============================================================
 const db = mysql.createPool({
-    host: 'onehost-amdcloudhn042501.000nethost.com', 
-    user: 'jxcjzqgbhosting_Chucongvinh2004', 
-    password: 'Chucongvinh2004@', 
-    database: 'jxcjzqgbhosting_nangkhieuTriDuc',
+    host: 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com', 
+    port: 4000, // Bắt buộc phải có vì TiDB dùng port 4000
+    user: '3tWeDV5dQ95XXWH.root', 
+    password: 'ĐIỀN_MẬT_KHẨU_CỦA_BẠN_VÀO_ĐÂY', // Thay mật khẩu của bạn vào đây
+    database: 'test', 
+    ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true
+    },
     waitForConnections: true,
-    connectionLimit: 10,  // Tự động duy trì 10 sợi cáp cùng lúc
-    queueLimit: 0         // Xếp hàng lệnh không giới hạn nếu cáp bận
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-// Test thử xem Bó cáp (Pool) đã thông chưa
+// Test kết nối Cloud
 db.getConnection((err, connection) => {
     if (err) {
-        console.error('❌ Lỗi khi khởi tạo Pool Database:', err.code);
+        console.error('❌ Lỗi kết nối TiDB Cloud:', err);
     } else {
-        console.log('✅ Đã kết nối MySQL thành công (Chế độ Pool Bất Tử)!');
-        connection.release(); // Test xong thì nhả cáp ra cho thằng khác dùng
+        console.log('✅ Đã kết nối TiDB Cloud thành công (Bất tử 100%)!');
+        connection.release();
     }
 });
 // ============================================================
