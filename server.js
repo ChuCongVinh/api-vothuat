@@ -20,7 +20,7 @@ const db = mysql.createPool({
     host: 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com', 
     port: 4000, // Bắt buộc phải có vì TiDB dùng port 4000
     user: '3tWeDV5dQ95XXWH.root', 
-    password: 'ĐIỀN_MẬT_KHẨU_CỦA_BẠN_VÀO_ĐÂY', // Thay mật khẩu của bạn vào đây
+    password: '0VRzRsz9vogQ3iL9', // Thay mật khẩu của bạn vào đây
     database: 'test', 
     ssl: {
         minVersion: 'TLSv1.2',
