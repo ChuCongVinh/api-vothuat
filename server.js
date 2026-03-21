@@ -21,7 +21,7 @@ const db = mysql.createPool({
     port: 4000, // Bắt buộc phải có vì TiDB dùng port 4000
     user: '3tWeDV5dQ95XXWH.root', 
     password: 'Bwj1316FgQ1U8Tro', // Thay mật khẩu của bạn vào đây
-    database: 'test', 
+    database: 'jxcjzqgbhosting_nangkhieuTriDuc',
     ssl: {
         minVersion: 'TLSv1.2',
         rejectUnauthorized: true
