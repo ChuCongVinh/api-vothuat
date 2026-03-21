@@ -19,7 +19,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 // 1. KẾT NỐI DATABASE (CHẾ ĐỘ POOL BẤT TỬ)
 // ============================================================
 const db = mysql.createPool({
-    host: '202.92.4.66', 
+    host: 'onehost-amdcloudhn042501.000nethost.com', 
     user: 'jxcjzqgbhosting_Chucongvinh2004', 
     password: 'Chucongvinh2004@', 
     database: 'jxcjzqgbhosting_nangkhieuTriDuc',

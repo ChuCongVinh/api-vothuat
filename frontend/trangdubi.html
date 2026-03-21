@@ -211,10 +211,9 @@
             if (side === 'aka') gameState.akaScore = Math.max(0, gameState.akaScore + points);
             else gameState.aoScore = Math.max(0, gameState.aoScore + points);
             
+            // Chỉ bắn tín hiệu cộng điểm sang TV, XÓA LOGIC TỰ ĐỘNG SENSHU
             if (points > 0) broadcastAction(side, points);
-            if (points > 0 && gameState.senshu === null && gameState.akaScore + gameState.aoScore === points) {
-                gameState.senshu = side; broadcastAction(side, 'senshu');
-            }
+            
             renderUI();
             
             // Cách biệt 8 điểm
@@ -242,7 +241,19 @@
             if(gameState.aoPen >= 5) declareWinner('aka', "AO BỊ HANSOKU (5 LỖI)");
         }
 
-        function toggleSenshu(side) { if (!isMatchEnded) { gameState.senshu = (gameState.senshu === side) ? null : side; renderUI(); } }
+        // --- ĐÃ SỬA: GỬI TÍN HIỆU FLASH KHI BẤM NÚT SENSHU ---
+        function toggleSenshu(side) { 
+            if (!isMatchEnded) { 
+                if (gameState.senshu !== side) {
+                    gameState.senshu = side;
+                    // Bắn tín hiệu để màn hình TV biết là cần phải nháy bảng Senshu to đùng
+                    channel.postMessage({ type: 'SHOW_ACTION', side: side, action: 'senshu_flash' });
+                } else {
+                    gameState.senshu = null;
+                }
+                renderUI(); 
+            } 
+        }
 
         function renderUI() {
             document.getElementById('scoreAka').innerText = gameState.akaScore;

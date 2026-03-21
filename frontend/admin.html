@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
     <html lang="vi">
     <head>
         <meta charset="UTF-8">
@@ -9,13 +9,13 @@
         <style>
             /* Sửa màu cho nút Quay lại */
             .back-btn {
-                background-color: #f8f9fa !important; /* Nền xám nhạt */
-                color: #333 !important; /* Chữ màu đen/xám đậm */
-                border: 1px solid #ccc; /* Viền nhẹ cho nổi bật */
+                background-color: #f8f9fa !important;
+                color: #333 !important;
+                border: 1px solid #ccc;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             }
             .back-btn:hover {
-                background-color: #e2e2e2 !important; /* Đậm hơn một chút khi di chuột */
+                background-color: #e2e2e2 !important;
                 color: #000 !important;
             }
             /* CSS GIAO DIỆN CHÍNH */
@@ -59,6 +59,8 @@
             .belt-xanh-duong { background: #2196f3; color: white; border-color: #1976d2; }
             .belt-nau { background: #795548; color: white; border-color: #5d4037; }
             .belt-den { background: #000; color: white; border-color: #000; }
+            /* MỚI: Màu xám cho tùy chọn Không đai/Môn khác */
+            .belt-khong { background: #e9ecef; color: #495057; border-color: #ced4da; font-style: italic; }
 
             /* BADGE TRẠNG THÁI */
             .badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; }
@@ -164,6 +166,7 @@
                         <select id="filterClub" onchange="filterUsers()" style="width:200px; margin:0;"><option value="">-- Tất cả CLB --</option></select>
                         <select id="filterLevel" onchange="filterUsers()" style="width:150px; margin:0;">
                             <option value="">-- Trình độ --</option>
+                            <option value="Không có / Khác">Không có / Khác</option>
                             <option value="Đai trắng">Đai trắng</option>
                             <option value="Đai vàng">Đai vàng</option>
                             <option value="Đai xanh lá">Đai xanh lá</option>
@@ -298,8 +301,9 @@
                 <select id="userClubSelect" style="flex:1"><option value="">-- Chọn CLB --</option></select>
             </div>
 
-            <label style="font-weight:bold; font-size:12px;">Trình độ (Đai)</label>
+            <label style="font-weight:bold; font-size:12px;">Trình độ / Bậc</label>
             <select id="userLevel">
+                <option value="Không có / Khác">Không có / Khác</option>
                 <option value="Đai trắng">Đai trắng</option>
                 <option value="Đai vàng">Đai vàng</option>
                 <option value="Đai xanh lá">Đai xanh lá</option>
@@ -329,6 +333,7 @@
                     <div style="flex:1">
                         <label style="font-weight:bold; font-size:12px;">Trình Độ</label>
                         <select id="editMemLevel">
+                            <option value="Không có / Khác">Không có / Khác</option>
                             <option value="Đai trắng">Đai trắng</option>
                             <option value="Đai vàng">Đai vàng</option>
                             <option value="Đai xanh lá">Đai xanh lá</option>
@@ -405,6 +410,7 @@
                     <div style="flex:1">
                         <label style="font-weight:bold; font-size:12px;">Trình độ</label>
                         <select id="memLevel">
+                            <option value="Không có / Khác">Không có / Khác</option>
                             <option value="Đai trắng">Đai trắng</option>
                             <option value="Đai vàng">Đai vàng</option>
                             <option value="Đai xanh lá">Đai xanh lá</option>
@@ -437,14 +443,15 @@
 
             // --- HÀM TIỆN ÍCH MÀU ĐAI ---
             function getBeltColorClass(level) {
-                if(!level) return 'belt-trang';
+                if(!level) return 'belt-khong';
                 const l = level.toLowerCase();
                 if(l.includes('vàng')) return 'belt-vang';
                 if(l.includes('xanh lá')) return 'belt-xanh-la';
                 if(l.includes('xanh dương')) return 'belt-xanh-duong';
                 if(l.includes('nâu')) return 'belt-nau';
                 if(l.includes('đen')) return 'belt-den';
-                return 'belt-trang';
+                if(l.includes('trắng')) return 'belt-trang';
+                return 'belt-khong'; // Áp dụng cho "Không có / Khác" hoặc bất kỳ text nào không khớp
             }
 
             // --- ĐIỀU HƯỚNG ---
@@ -457,8 +464,7 @@
                 if(id === 'tab-clubs') loadClubs();
                 if(id === 'tab-users') loadAllUsers();
                 if(id === 'tab-scores') loadScores();
-                if(id === 'tab-regs') loadRegistrations(); // <--- MỚI
-                // Thêm dòng này vào cuối hàm switchTab
+                if(id === 'tab-regs') loadRegistrations(); 
             if(id === 'tab-attendance') {
                 if(!document.getElementById('attDate').value) document.getElementById('attDate').value = new Date().toISOString().split('T')[0];
                 loadAttendance();
@@ -474,7 +480,6 @@
             function openModal(id) { document.getElementById(id).style.display = 'flex'; }
             function closeModal(id) { 
                 document.getElementById(id).style.display = 'none'; 
-                // Reset biến duyệt đăng ký khi đóng modal user
                 if(id === 'userModal') pendingDeleteRegId = null;
             }
             async function del(url, cb) { if(confirm("Chắc chắn xóa?")) { await fetch(url, {method:'DELETE'}); cb(); } }
@@ -505,7 +510,6 @@
                 if(document.getElementById('filterScoreClub')) document.getElementById('filterScoreClub').innerHTML = filterOpts;
                 if(document.getElementById('scoreModalClubFilter')) document.getElementById('scoreModalClubFilter').innerHTML = opts.replace("Chọn CLB", "Lọc theo CLB");
                 if(document.getElementById('attClubFilter')) document.getElementById('attClubFilter').innerHTML = opts;
-            // Bơm danh sách CLB vào form Cập nhật học viên
             if(document.getElementById('editMemClubSelect')) document.getElementById('editMemClubSelect').innerHTML = opts;
         }
             
@@ -556,7 +560,7 @@
                     const s = u.status || '';
                     if(s.includes('buổi')) badgeClass = 'bg-student'; 
                     else if(s === 'Tập thử') badgeClass = 'bg-yellow'; 
-                    else if(s === 'Đã nghỉ') badgeClass = 'bg-retired'; // Màu xám gạch ngang
+                    else if(s === 'Đã nghỉ') badgeClass = 'bg-retired'; 
                     
                     const userJson = JSON.stringify(u).replace(/"/g, "&quot;");
                     const beltClass = getBeltColorClass(u.level);
@@ -564,7 +568,7 @@
                     return `
                     <tr>
                         <td style="font-weight:bold; color:#333;">${u.fullname}</td>
-                        <td><span class="belt-badge ${beltClass}" style="min-width:60px; font-size:11px;">${u.level||'Đai trắng'}</span></td>
+                        <td><span class="belt-badge ${beltClass}" style="min-width:60px; font-size:11px;">${u.level||'Không có / Khác'}</span></td>
                         <td>${joinDate}</td>
                         <td><span class="badge ${badgeClass}">${u.status || '1 buổi / tuần'}</span></td>
                         <td>
@@ -579,7 +583,7 @@
                 document.getElementById('editMemId').value = u.id;
                 document.getElementById('editMemClubSelect').value = u.club_id || "";
                 document.getElementById('editMemName').value = u.fullname;
-                document.getElementById('editMemLevel').value = u.level || 'Đai trắng';
+                document.getElementById('editMemLevel').value = u.level || 'Không có / Khác';
                 document.getElementById('editMemStatus').value = u.status || 'Chính thức';
                 document.getElementById('editMemNote').value = u.note || '';
                 
@@ -610,7 +614,7 @@
                 else loadClubMembers(currentClubId);
             } 
 
-            // --- HÀM THÊM USER (ĐÃ SỬA: Thêm Level & Xóa đăng ký cũ) ---
+            // --- HÀM THÊM USER ---
             function openUserModal() { 
                 document.getElementById('userFullname').value=''; 
                 document.getElementById('userUsername').value=''; 
@@ -623,7 +627,7 @@
                 const pass = document.getElementById('userPass').value || "123456";
                 const role = document.getElementById('userRole').value;
                 const clubId = document.getElementById('userClubSelect').value;
-                const level = document.getElementById('userLevel').value; // Lấy màu đai
+                const level = document.getElementById('userLevel').value; 
 
                 if(!fullname || !clubId) return alert("Vui lòng điền Tên và Chọn CLB!");
 
@@ -632,17 +636,16 @@
                     method: 'POST', headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({ 
                         fullname, username, password: pass, role, club_id: clubId, 
-                        level: level // Gửi level lên
+                        level: level 
                     })
                 });
                 const data = await res.json();
 
                 if(data.success) {
-                    // 2. Nếu đang Duyệt từ Đăng ký -> Xóa đơn đăng ký cũ
                     if (pendingDeleteRegId) {
                         await fetch(`${API}/registrations/${pendingDeleteRegId}`, { method: 'DELETE' });
                         pendingDeleteRegId = null; // Reset
-                        loadRegistrations(); // Tải lại bảng đăng ký
+                        loadRegistrations(); 
                     }
 
                     alert("Thêm thành công!");
@@ -696,16 +699,12 @@
 
                 const list = allUsers.filter(u => {
                     const uClub = u.club_name || "";
-                    const uLevel = u.level || "Đai trắng";
+                    const uLevel = u.level || "Không có / Khác";
                     const uStatus = u.status || "";
 
                     const matchKw = (u.fullname.toLowerCase().includes(kw) || u.username.includes(kw));
                     const matchClub = (clb === "" || uClub === clb);
                     const matchLevel = (level === "" || uLevel === level);
-                    // Logic lọc trạng thái: 
-                    // Nếu chọn "Đã nghỉ" -> Chỉ hiện người đã nghỉ
-                    // Nếu chọn "Đang tập" -> Hiện tất cả TRỪ người đã nghỉ
-                    // Nếu không chọn gì -> Hiện tất cả
                     let matchStatus = true;
                     if(statusFilter === "Đã nghỉ") matchStatus = (uStatus === "Đã nghỉ");
                     else if(statusFilter === "Đang tập") matchStatus = (uStatus !== "Đã nghỉ");
@@ -725,7 +724,7 @@
                     return `<tr>
                         <td><b class="clickable-name" onclick='viewUserDetail(${userJson})'>${u.fullname}</b></td>
                         <td><span class="badge bg-club">${u.club_name||'--'}</span></td>
-                        <td><span class="belt-badge ${beltClass}">${u.level || 'Đai trắng'}</span></td>
+                        <td><span class="belt-badge ${beltClass}">${u.level || 'Không có / Khác'}</span></td>
                         <td>${date}</td>
                         <td><span class="badge ${statusClass}">${u.status||'Chính thức'}</span></td>
                         <td>
@@ -750,7 +749,7 @@
                     const username = "user" + Math.floor(Math.random()*100000); 
                     await fetch(API + '/users', {
                         method: 'POST', headers: {'Content-Type':'application/json'},
-                        body: JSON.stringify({ fullname: name.trim(), username: username, password: '123456', role: 'student', subject: 'Karate', club_id: clubId, join_date: document.getElementById('bulkDate').value, status: document.getElementById('bulkStatus').value, note: document.getElementById('bulkNote').value, level: 'Đai trắng' })
+                        body: JSON.stringify({ fullname: name.trim(), username: username, password: '123456', role: 'student', subject: 'Karate', club_id: clubId, join_date: document.getElementById('bulkDate').value, status: document.getElementById('bulkStatus').value, note: document.getElementById('bulkNote').value, level: 'Không có / Khác' })
                     });
                 }
                 alert("Đã thêm xong!"); closeModal('bulkModal'); loadAllUsers(); btn.innerText = "Thêm mới"; btn.disabled = false;
@@ -795,7 +794,7 @@
                 closeModal('scoreModal'); loadScores();
             }
 
-            // --- 6. QUẢN LÝ ĐĂNG KÝ (NÂNG CẤP) ---
+            // --- 6. QUẢN LÝ ĐĂNG KÝ ---
             async function loadRegistrations() {
                 const res = await fetch(API + '/registrations');
                 const data = await res.json();
@@ -815,15 +814,13 @@
                 }).join('');
             }
 
-            // --- HÀM DUYỆT ĐĂNG KÝ (ĐÃ THÊM MỚI) ---
             function approveRegistration(regId) {
                 const regData = window.allRegs.find(r => r.id === regId);
                 if (!regData) return;
                 openModal('userModal');
                 document.getElementById('userFullname').value = regData.fullname;
-                // Tự động tạo user từ số điện thoại, nếu không có thì random
                 document.getElementById('userUsername').value = regData.phone || `user${Math.floor(Math.random()*1000)}`;
-                pendingDeleteRegId = regId; // Đánh dấu ID cần xóa sau khi lưu xong
+                pendingDeleteRegId = regId; 
             }
 
             function openAddMemberModal() {
@@ -837,12 +834,10 @@
                 const namesText = document.getElementById('memNames').value;
                 const names = namesText.split('\n').filter(n => n.trim() !== '');
                 const level = document.getElementById('memLevel').value;
-                // Lấy ngày từ ô input, nếu không chọn thì lấy ngày hôm nay
                 const joinDate = document.getElementById('memDate').value || new Date().toISOString().split('T')[0];
 
                 if(names.length === 0) return alert("Vui lòng nhập ít nhất 1 tên!");
 
-                // Hiệu ứng nút bấm
                 const btn = document.querySelector('#addMemModal .btn-blue');
                 const originalText = btn.innerText;
                 btn.innerText = "Đang lưu..."; 
@@ -854,22 +849,21 @@
                         headers: {'Content-Type':'application/json'},
                         body: JSON.stringify({ 
                             fullname: name.trim(), 
-                            username: "u" + Math.floor(Math.random()*1000000), // Random username tránh trùng
+                            username: "u" + Math.floor(Math.random()*1000000), 
                             password: '123', 
                             role: 'student', 
                             club_id: currentClubId, 
                             level: level,
-                            join_date: joinDate, // Gửi ngày gia nhập
+                            join_date: joinDate, 
                             status: 'Chính thức'
                         })
                     });
                 }
                 
-                // Reset lại nút và đóng modal
                 btn.innerText = originalText; 
                 btn.disabled = false;
                 closeModal('addMemModal'); 
-                loadClubMembers(currentClubId); // Tải lại danh sách
+                loadClubMembers(currentClubId); 
             }
             // --- HÀM XỬ LÝ ĐIỂM DANH ---
         async function loadAttendance() {
@@ -890,14 +884,14 @@
             }
 
             document.getElementById('attTable').innerHTML = data.map(u => {
-                const status = u.status || 'Có mặt'; // Mặc định là Có mặt nếu chưa từng điểm danh
+                const status = u.status || 'Có mặt'; 
                 const color = status === 'Vắng' ? 'red' : (status === 'Có phép' ? '#ff8c00' : 'green');
                 const beltClass = getBeltColorClass(u.level);
 
                 return `
                 <tr class="att-row" data-id="${u.user_id}">
                     <td style="font-weight:bold; font-size:15px;">${u.fullname}</td>
-                    <td><span class="belt-badge ${beltClass}">${u.level || 'Đai trắng'}</span></td>
+                    <td><span class="belt-badge ${beltClass}">${u.level || 'Không có / Khác'}</span></td>
                     <td>
                         <select class="att-status" style="width:100%; margin:0; font-weight:bold; color:${color}; border-color:${color};" onchange="this.style.color = this.options[this.selectedIndex].style.color; this.style.borderColor = this.options[this.selectedIndex].style.color;">
                             <option value="Có mặt" style="color:green" ${status==='Có mặt'?'selected':''}>Có mặt</option>
@@ -952,14 +946,12 @@
         }
         // --- XEM CHI TIẾT HỌC VIÊN VÀ LỊCH SỬ ĐIỂM DANH ---
             function viewUserDetail(u) {
-                // 1. Ẩn các tab khác, hiện tab chi tiết
                 document.querySelectorAll('.section').forEach(e => e.classList.remove('active-section'));
                 document.getElementById('user-detail-view').classList.add('active-section');
 
-                // 2. Điền thông tin cá nhân
                 document.getElementById('detailUserName').innerText = u.fullname;
                 document.getElementById('detailUserClub').innerText = u.club_name || 'Chưa xếp lớp';
-                document.getElementById('detailUserLevel').innerHTML = `<span class="belt-badge ${getBeltColorClass(u.level)}">${u.level || 'Đai trắng'}</span>`;
+                document.getElementById('detailUserLevel').innerHTML = `<span class="belt-badge ${getBeltColorClass(u.level)}">${u.level || 'Không có / Khác'}</span>`;
                 document.getElementById('detailUserJoinDate').innerText = u.join_date ? new Date(u.join_date).toLocaleDateString('vi-VN') : '--';
                 
                 let statusClass = 'bg-student';
@@ -967,7 +959,6 @@
                 else if(u.status === 'Tập thử') statusClass = 'bg-yellow';
                 document.getElementById('detailUserStatus').innerHTML = `<span class="badge ${statusClass}">${u.status || 'Chính thức'}</span>`;
 
-                // 3. Tải lịch sử điểm danh
                 loadUserAttendance(u.id);
             }
 

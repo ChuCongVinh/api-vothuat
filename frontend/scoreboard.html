@@ -24,12 +24,17 @@
         .senshu-active { opacity: 1; filter: grayscale(0%); transform: scale(1.05); background: rgba(255,255,255,0.5); }
         .senshu-card { width: 40px; height: 40px; border-radius: 8px; position: relative; border: 2px solid #ccc; background: #e0e0e0; }
         .senshu-card::after { content: 'S'; position: absolute; bottom: 0px; right: 4px; font-size: 1rem; font-weight: 900; color: #888; font-family: sans-serif; }
-        .senshu-text { font-weight: 900; color: #777; font-size: 1.2rem; }
+        
+        /* CẬP NHẬT CSS CHO CHỮ SENSHU MỚI */
+        .senshu-text-box { display: flex; flex-direction: column; line-height: 1; color: #777; }
+        .senshu-main { font-size: 1.2rem; font-weight: 900; }
+        .senshu-sub { font-size: 0.65rem; font-weight: bold; color: #888; text-transform: uppercase; margin-top: 2px; }
 
         .senshu-active .senshu-card.aka-card { background: linear-gradient(135deg, #ff4d4d, #dc3545); border-color: #a71d2a; box-shadow: 0 0 10px rgba(220, 53, 69, 0.5); }
         .senshu-active .senshu-card.ao-card { background: linear-gradient(135deg, #4da6ff, #0d6efd); border-color: #0a58ca; box-shadow: 0 0 10px rgba(13, 110, 253, 0.5); }
         .senshu-active .senshu-card::after { color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
-        .senshu-active .senshu-text { color: #333; }
+        .senshu-active .senshu-text-box .senshu-main { color: #333; }
+        .senshu-active .senshu-text-box .senshu-sub { color: #555; }
 
         .score-big { font-size: 9rem; font-weight: 900; line-height: 1; margin: 0; text-shadow: 4px 4px 0 rgba(0,0,0,0.1); cursor: pointer; user-select: none; }
         .aka-text { color: var(--aka-color); } .ao-text { color: var(--ao-color); }
@@ -91,9 +96,15 @@
         <div class="competitor-col">
             <input type="text" class="comp-name" id="nameAka" value="AKA" oninput="broadcastInfo()">
             <input type="text" class="comp-team" id="teamAka" value="DOAN 1" oninput="broadcastInfo()">
+            
             <div id="senshuContainerAka" class="senshu-container" onclick="toggleSenshu('aka')">
-                <div class="senshu-card aka-card"></div><div class="senshu-text">(SENSHU)</div>
+                <div class="senshu-card aka-card"></div>
+                <div class="senshu-text-box" style="align-items: flex-start;">
+                    <span class="senshu-main">SENSHU</span>
+                    <span class="senshu-sub">First Point Advantage</span>
+                </div>
             </div>
+            
             <div class="score-big aka-text" id="scoreAka" onclick="updateScore('aka', 1)">0</div>
             <div class="penalty-dots" id="dotsAka">
                 <div class="dot" onclick="setPenalty('aka', 1)">1</div><div class="dot" onclick="setPenalty('aka', 2)">2</div>
@@ -116,9 +127,15 @@
         <div class="competitor-col">
             <input type="text" class="comp-name" id="nameAo" value="AO" oninput="broadcastInfo()">
             <input type="text" class="comp-team" id="teamAo" value="DOAN 2" oninput="broadcastInfo()">
+            
             <div id="senshuContainerAo" class="senshu-container" onclick="toggleSenshu('ao')">
-                <div class="senshu-label" style="margin-right:10px; font-weight:bold; color:#aaa;">SENSHU</div><div class="senshu-card ao-card"></div>
+                <div class="senshu-text-box" style="align-items: flex-end;">
+                    <span class="senshu-main">SENSHU</span>
+                    <span class="senshu-sub">First Point Advantage</span>
+                </div>
+                <div class="senshu-card ao-card"></div>
             </div>
+            
             <div class="score-big ao-text" id="scoreAo" onclick="updateScore('ao', 1)">0</div>
             <div class="penalty-dots" id="dotsAo">
                 <div class="dot" onclick="setPenalty('ao', 1)">1</div><div class="dot" onclick="setPenalty('ao', 2)">2</div>
@@ -227,15 +244,20 @@
 
         function updateScore(side, points) {
             if (isMatchEnded) return;
+            
+            // 1. Cộng hoặc Trừ điểm
             if (side === 'aka') gameState.akaScore = Math.max(0, gameState.akaScore + points);
             else gameState.aoScore = Math.max(0, gameState.aoScore + points);
+            
+            // 2. Bắn tín hiệu vung cờ sang TV (chỉ bắn khi được cộng điểm dương)
             if (points > 0) broadcastAction(side, points);
-            if (points > 0 && gameState.senshu === null && gameState.akaScore + gameState.aoScore === points) {
-                gameState.senshu = side; broadcastAction(side, 'senshu');
-            }
+            
+            // ĐÃ XÓA TÍNH NĂNG TỰ ĐỘNG GÁN SENSHU
+
+            // 3. Cập nhật giao diện
             renderUI();
             
-            // TỰ ĐỘNG KẾT THÚC KHI CÁCH BIỆT 8 ĐIỂM
+            // 4. Tự động kết thúc nếu có VĐV dẫn trước 8 điểm
             let diff = Math.abs(gameState.akaScore - gameState.aoScore);
             if (diff >= 8) {
                 let winner = gameState.akaScore > gameState.aoScore ? 'aka' : 'ao';
@@ -258,22 +280,42 @@
             
             renderUI();
 
-            // TỰ ĐỘNG KẾT THÚC KHI HANSOKU
+            // TỰ ĐỘNG KẾT THÚC KHI BỊ HANSOKU (5 LỖI)
             if(gameState.akaPen >= 5) declareWinner('ao', "AKA BỊ HANSOKU (5 LỖI)");
             if(gameState.aoPen >= 5) declareWinner('aka', "AO BỊ HANSOKU (5 LỖI)");
         }
 
-        function toggleSenshu(side) { if (!isMatchEnded) { gameState.senshu = (gameState.senshu === side) ? null : side; renderUI(); } }
+        // --- ĐÃ SỬA: GỬI TÍN HIỆU FLASH KHI BẤM NÚT SENSHU ---
+        function toggleSenshu(side) { 
+            if (!isMatchEnded) { 
+                if (gameState.senshu !== side) {
+                    gameState.senshu = side;
+                    // Bắn tín hiệu để màn hình TV biết là cần phải nháy bảng Senshu to đùng
+                    channel.postMessage({ type: 'SHOW_ACTION', side: side, action: 'senshu_flash' });
+                } else {
+                    gameState.senshu = null;
+                }
+                renderUI(); 
+            } 
+        }
 
         function renderUI() {
             document.getElementById('scoreAka').innerText = gameState.akaScore;
             document.getElementById('scoreAo').innerText = gameState.aoScore;
-            const sAka = document.getElementById('senshuContainerAka'); const sAo = document.getElementById('senshuContainerAo');
-            sAka.classList.remove('senshu-active'); sAo.classList.remove('senshu-active');
+            
+            const sAka = document.getElementById('senshuContainerAka'); 
+            const sAo = document.getElementById('senshuContainerAo');
+            
+            sAka.classList.remove('senshu-active'); 
+            sAo.classList.remove('senshu-active');
+            
             if(gameState.senshu === 'aka') sAka.classList.add('senshu-active');
             if(gameState.senshu === 'ao') sAo.classList.add('senshu-active');
-            updateDots('dotsAka', gameState.akaPen); updateDots('dotsAo', gameState.aoPen);
-            broadcastState();
+            
+            updateDots('dotsAka', gameState.akaPen); 
+            updateDots('dotsAo', gameState.aoPen);
+            
+            broadcastState(); // Gửi tín hiệu sang màn hình TV
         }
 
         function updateDots(id, count) {
@@ -287,6 +329,7 @@
             const btn = document.getElementById('btnTimer');
             btn.innerText = timer.isRunning ? "STOP" : "START";
             btn.style.background = timer.isRunning ? "#dc3545" : "#198754";
+            
             if (timer.isRunning) {
                 timer.interval = setInterval(() => {
                     if (timer.time > 0) { timer.time--; renderTimer(); }
@@ -295,10 +338,11 @@
                         checkTimeUpWinner(); 
                     }
                 }, 1000);
-            } else clearInterval(timer.interval);
+            } else {
+                clearInterval(timer.interval);
+            }
         }
 
-        // --- CÁC HÀM LIÊN QUAN TỚI ĐỒNG HỒ ĐƯỢC CHỈNH SỬA ---
         function editTimer() {
             if (timer.isRunning) {
                 alert("Vui lòng dừng (STOP) đồng hồ trước khi sửa giờ!");
@@ -314,7 +358,7 @@
                     let secs = parseInt(parts[1]);
                     let totalSeconds = (mins * 60) + secs;
                     
-                    defaultTime = totalSeconds; // Lưu lại làm mốc mặc định mới
+                    defaultTime = totalSeconds; 
                     timer.time = totalSeconds;
                     renderTimer();
                 } else {
@@ -326,7 +370,7 @@
         function resetTimer() { 
             timer.isRunning = false; 
             clearInterval(timer.interval); 
-            timer.time = defaultTime; // Lấy mốc thời gian đã được set (2 phút hoặc 3 phút)
+            timer.time = defaultTime; 
             renderTimer(); 
             document.getElementById('btnTimer').innerText = "START"; 
             document.getElementById('btnTimer').style.background = "#198754"; 
