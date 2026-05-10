@@ -49,7 +49,7 @@
             /* MODAL CHUNG */
             .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 2000; }
             .modal-content { background: white; padding: 30px; border-radius: 10px; width: 500px; }
-            input, select { padding: 10px; width: 100%; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; box-sizing: border-box; }
+            input, select, textarea { padding: 10px; width: 100%; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 10px; box-sizing: border-box; }
 
             /* CSS MÀU ĐAI (BELT) */
             .belt-badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; border: 1px solid #ccc; display: inline-block; min-width: 80px; text-align: center; }
@@ -59,7 +59,6 @@
             .belt-xanh-duong { background: #2196f3; color: white; border-color: #1976d2; }
             .belt-nau { background: #795548; color: white; border-color: #5d4037; }
             .belt-den { background: #000; color: white; border-color: #000; }
-            /* MỚI: Màu xám cho tùy chọn Không đai/Môn khác */
             .belt-khong { background: #e9ecef; color: #495057; border-color: #ced4da; font-style: italic; }
 
             /* BADGE TRẠNG THÁI */
@@ -74,6 +73,9 @@
             /* CLUB DETAIL */
             .club-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
             .clickable-name { color: #1565c0; font-weight: bold; cursor: pointer; text-decoration: underline; }
+            
+            /* Tiện ích Flex */
+            .action-btns { display: flex; gap: 5px; flex-wrap: wrap; }
         </style>
     </head>
     <body>
@@ -376,6 +378,7 @@
             <button class="btn btn-blue" onclick="saveClub()">Lưu</button>
             <button class="btn btn-red" onclick="closeModal('clubModal')">Đóng</button>
         </div></div>
+        
         <div id="fundModal" class="modal"><div class="modal-content">
             <h3>Giao Dịch Quỹ</h3>
             <select id="fundType"><option value="thu">Thu</option><option value="chi">Chi</option></select>
@@ -384,6 +387,7 @@
             <button class="btn btn-green" onclick="saveFund()">Lưu</button>
             <button class="btn btn-red" onclick="closeModal('fundModal')">Đóng</button>
         </div></div>
+        
         <div id="scoreModal" class="modal"><div class="modal-content">
             <h3>Nhập Kết Quả Thi</h3>
             <div style="display:flex; gap:5px; margin-bottom:10px;">
@@ -397,6 +401,7 @@
             <label>4. Ngày Thi</label><input type="date" id="scoreDate">
             <div style="text-align:right; margin-top:15px;"><button class="btn btn-yellow" onclick="saveScore()">Lưu Kết Quả</button><button class="btn btn-red" onclick="closeModal('scoreModal')">Đóng</button></div>
         </div></div>
+        
         <div id="addMemModal" class="modal">
             <div class="modal-content">
                 <div style="margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
@@ -439,7 +444,7 @@
             let allUsers = [];
             let allClubs = [];
             let allScores = []; 
-            let pendingDeleteRegId = null; // Biến lưu ID đơn đăng ký đang chờ duyệt
+            let pendingDeleteRegId = null; 
 
             // --- HÀM TIỆN ÍCH MÀU ĐAI ---
             function getBeltColorClass(level) {
@@ -451,7 +456,7 @@
                 if(l.includes('nâu')) return 'belt-nau';
                 if(l.includes('đen')) return 'belt-den';
                 if(l.includes('trắng')) return 'belt-trang';
-                return 'belt-khong'; // Áp dụng cho "Không có / Khác" hoặc bất kỳ text nào không khớp
+                return 'belt-khong'; 
             }
 
             // --- ĐIỀU HƯỚNG ---
@@ -465,10 +470,10 @@
                 if(id === 'tab-users') loadAllUsers();
                 if(id === 'tab-scores') loadScores();
                 if(id === 'tab-regs') loadRegistrations(); 
-            if(id === 'tab-attendance') {
-                if(!document.getElementById('attDate').value) document.getElementById('attDate').value = new Date().toISOString().split('T')[0];
-                loadAttendance();
-            }
+                if(id === 'tab-attendance') {
+                    if(!document.getElementById('attDate').value) document.getElementById('attDate').value = new Date().toISOString().split('T')[0];
+                    loadAttendance();
+                }
             }
 
             function showSubTab(id) {
@@ -476,13 +481,38 @@
                 document.getElementById('sub-funds').style.display = (id === 'sub-funds') ? 'block' : 'none';
             }
 
-            // --- 2. MODAL & HELPER ---
+            // --- MODAL & HELPER ---
             function openModal(id) { document.getElementById(id).style.display = 'flex'; }
             function closeModal(id) { 
                 document.getElementById(id).style.display = 'none'; 
                 if(id === 'userModal') pendingDeleteRegId = null;
             }
-            async function del(url, cb) { if(confirm("Chắc chắn xóa?")) { await fetch(url, {method:'DELETE'}); cb(); } }
+            
+            // Xóa Vĩnh Viễn
+            async function del(url, cb) { if(confirm("CẢNH BÁO: Xóa vĩnh viễn dữ liệu này? Hành động không thể hoàn tác!")) { await fetch(url, {method:'DELETE'}); cb(); } }
+
+            // --- TÍNH NĂNG MỚI: CHO NGHỈ TẬP / ĐI TẬP LẠI (SOFT DELETE) ---
+            async function toggleUserStatus(u, newStatus) {
+                if(confirm(`Xác nhận chuyển học viên "${u.fullname}" sang trạng thái: ${newStatus}?`)) {
+                    const body = {
+                        fullname: u.fullname,
+                        join_date: u.join_date ? new Date(u.join_date).toISOString().split('T')[0] : null,
+                        status: newStatus,
+                        note: u.note,
+                        level: u.level,
+                        club_id: u.club_id
+                    };
+                    await fetch(API + '/users/' + u.id, {
+                        method: 'PUT',
+                        headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify(body)
+                    });
+                    
+                    // Tải lại bảng tùy theo việc đang ở danh sách chung hay trong chi tiết CLB
+                    if(document.getElementById('tab-users').classList.contains('active-section')) loadAllUsers();
+                    else loadClubMembers(currentClubId);
+                }
+            }
 
             // --- 3. CLB ---
             async function loadClubs() {
@@ -510,9 +540,8 @@
                 if(document.getElementById('filterScoreClub')) document.getElementById('filterScoreClub').innerHTML = filterOpts;
                 if(document.getElementById('scoreModalClubFilter')) document.getElementById('scoreModalClubFilter').innerHTML = opts.replace("Chọn CLB", "Lọc theo CLB");
                 if(document.getElementById('attClubFilter')) document.getElementById('attClubFilter').innerHTML = opts;
-            if(document.getElementById('editMemClubSelect')) document.getElementById('editMemClubSelect').innerHTML = opts;
-        }
-            
+                if(document.getElementById('editMemClubSelect')) document.getElementById('editMemClubSelect').innerHTML = opts;
+            }
 
             async function saveClub() {
                 await fetch(API + '/clubs', {
@@ -565,6 +594,11 @@
                     const userJson = JSON.stringify(u).replace(/"/g, "&quot;");
                     const beltClass = getBeltColorClass(u.level);
 
+                    // TÍNH NĂNG MỚI: Tự động đổi nút tùy vào trạng thái học viên
+                    const toggleBtn = s === 'Đã nghỉ'
+                        ? `<button class="btn btn-green" style="padding:5px 10px;" title="Khôi phục đi tập" onclick='toggleUserStatus(${userJson}, "Chính thức")'><i class="fa-solid fa-rotate-left"></i></button>`
+                        : `<button class="btn btn-gray" style="padding:5px 10px;" title="Cho nghỉ tập" onclick='toggleUserStatus(${userJson}, "Đã nghỉ")'><i class="fa-solid fa-user-slash"></i></button>`;
+
                     return `
                     <tr>
                         <td style="font-weight:bold; color:#333;">${u.fullname}</td>
@@ -572,8 +606,11 @@
                         <td>${joinDate}</td>
                         <td><span class="badge ${badgeClass}">${u.status || '1 buổi / tuần'}</span></td>
                         <td>
-                            <button class="btn btn-yellow" style="padding:5px 10px;" onclick="openEditMemberModal(${userJson})"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn btn-red" style="padding:5px 10px;" onclick="del('${API}/users/${u.id}', () => loadClubMembers(currentClubId))"><i class="fa-solid fa-trash"></i></button>
+                            <div class="action-btns">
+                                ${toggleBtn}
+                                <button class="btn btn-yellow" style="padding:5px 10px;" onclick="openEditMemberModal(${userJson})"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn btn-red" style="padding:5px 10px;" onclick="del('${API}/users/${u.id}', () => loadClubMembers(currentClubId))"><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </td>
                     </tr>
                 `}).join('');
@@ -631,7 +668,6 @@
 
                 if(!fullname || !clubId) return alert("Vui lòng điền Tên và Chọn CLB!");
 
-                // 1. Gửi lên Server
                 const res = await fetch(API + '/users', {
                     method: 'POST', headers: {'Content-Type':'application/json'},
                     body: JSON.stringify({ 
@@ -644,7 +680,7 @@
                 if(data.success) {
                     if (pendingDeleteRegId) {
                         await fetch(`${API}/registrations/${pendingDeleteRegId}`, { method: 'DELETE' });
-                        pendingDeleteRegId = null; // Reset
+                        pendingDeleteRegId = null; 
                         loadRegistrations(); 
                     }
 
@@ -721,6 +757,11 @@
 
                     const userJson = JSON.stringify(u).replace(/"/g, "&quot;");
 
+                    // TÍNH NĂNG MỚI: Tự động đổi nút tùy vào trạng thái học viên
+                    const toggleBtn = u.status === 'Đã nghỉ'
+                        ? `<button class="btn btn-green" style="padding:4px 8px;" title="Khôi phục đi tập" onclick='toggleUserStatus(${userJson}, "Chính thức")'><i class="fa-solid fa-rotate-left"></i></button>`
+                        : `<button class="btn btn-gray" style="padding:4px 8px;" title="Cho nghỉ tập" onclick='toggleUserStatus(${userJson}, "Đã nghỉ")'><i class="fa-solid fa-user-slash"></i></button>`;
+
                     return `<tr>
                         <td><b class="clickable-name" onclick='viewUserDetail(${userJson})'>${u.fullname}</b></td>
                         <td><span class="badge bg-club">${u.club_name||'--'}</span></td>
@@ -728,31 +769,14 @@
                         <td>${date}</td>
                         <td><span class="badge ${statusClass}">${u.status||'Chính thức'}</span></td>
                         <td>
-                            <button class="btn btn-yellow" style="padding:4px 8px;" onclick="openEditMemberModal(${userJson})"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn btn-red" style="padding:4px 8px;" onclick="del('${API}/users/${u.id}', loadAllUsers)"><i class="fa-solid fa-trash"></i></button>
+                            <div class="action-btns">
+                                ${toggleBtn}
+                                <button class="btn btn-yellow" style="padding:4px 8px;" onclick="openEditMemberModal(${userJson})"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn btn-red" style="padding:4px 8px;" onclick="del('${API}/users/${u.id}', loadAllUsers)"><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </td>
                     </tr>`;
                 }).join('');
-            }
-
-            function openBulkModal() { document.getElementById('bulkNames').value=''; document.getElementById('bulkDate').value=new Date().toISOString().split('T')[0]; openModal('bulkModal'); }
-            async function saveBulkMembers() {
-                const namesText = document.getElementById('bulkNames').value;
-                const clubId = document.getElementById('bulkClubSelect').value;
-                if(!namesText.trim() || !clubId) return alert("Thiếu thông tin!");
-                
-                const names = namesText.split('\n').filter(n => n.trim() !== '');
-                const btn = document.querySelector('#bulkModal .btn-blue');
-                btn.innerText = "Đang xử lý..."; btn.disabled = true;
-
-                for (let name of names) {
-                    const username = "user" + Math.floor(Math.random()*100000); 
-                    await fetch(API + '/users', {
-                        method: 'POST', headers: {'Content-Type':'application/json'},
-                        body: JSON.stringify({ fullname: name.trim(), username: username, password: '123456', role: 'student', subject: 'Karate', club_id: clubId, join_date: document.getElementById('bulkDate').value, status: document.getElementById('bulkStatus').value, note: document.getElementById('bulkNote').value, level: 'Không có / Khác' })
-                    });
-                }
-                alert("Đã thêm xong!"); closeModal('bulkModal'); loadAllUsers(); btn.innerText = "Thêm mới"; btn.disabled = false;
             }
 
             // --- 5. BẢNG ĐIỂM ---
@@ -865,86 +889,88 @@
                 closeModal('addMemModal'); 
                 loadClubMembers(currentClubId); 
             }
+
             // --- HÀM XỬ LÝ ĐIỂM DANH ---
-        async function loadAttendance() {
-            const date = document.getElementById('attDate').value;
-            const clubId = document.getElementById('attClubFilter').value;
+            async function loadAttendance() {
+                const date = document.getElementById('attDate').value;
+                const clubId = document.getElementById('attClubFilter').value;
 
-            if(!date || !clubId) {
-                document.getElementById('attTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">Vui lòng chọn Ngày và Câu Lạc Bộ để bắt đầu điểm danh</td></tr>';
-                return;
-            }
-
-            const res = await fetch(`${API}/attendance?date=${date}&club_id=${clubId}`);
-            const data = await res.json();
-
-            if(data.length === 0) {
-                document.getElementById('attTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">CLB này hiện chưa có học viên nào đang theo học!</td></tr>';
-                return;
-            }
-
-            document.getElementById('attTable').innerHTML = data.map(u => {
-                const status = u.status || 'Có mặt'; 
-                const color = status === 'Vắng' ? 'red' : (status === 'Có phép' ? '#ff8c00' : 'green');
-                const beltClass = getBeltColorClass(u.level);
-
-                return `
-                <tr class="att-row" data-id="${u.user_id}">
-                    <td style="font-weight:bold; font-size:15px;">${u.fullname}</td>
-                    <td><span class="belt-badge ${beltClass}">${u.level || 'Không có / Khác'}</span></td>
-                    <td>
-                        <select class="att-status" style="width:100%; margin:0; font-weight:bold; color:${color}; border-color:${color};" onchange="this.style.color = this.options[this.selectedIndex].style.color; this.style.borderColor = this.options[this.selectedIndex].style.color;">
-                            <option value="Có mặt" style="color:green" ${status==='Có mặt'?'selected':''}>Có mặt</option>
-                            <option value="Có phép" style="color:#ff8c00" ${status==='Có phép'?'selected':''}>Có phép</option>
-                            <option value="Vắng" style="color:red" ${status==='Vắng'?'selected':''}>Vắng không phép</option>
-                        </select>
-                    </td>
-                    <td><input type="text" class="att-note" value="${u.note || ''}" placeholder="Nhập lý do vắng..." style="margin:0; width:100%;"></td>
-                </tr>`;
-            }).join('');
-        }
-
-        async function saveAttendance() {
-            const date = document.getElementById('attDate').value;
-            const rows = document.querySelectorAll('.att-row');
-
-            if(!date) return alert("Vui lòng chọn ngày!");
-            if(rows.length === 0) return alert("Chưa có danh sách để lưu!");
-
-            const records = [];
-            rows.forEach(row => {
-                records.push({
-                    user_id: row.getAttribute('data-id'),
-                    status: row.querySelector('.att-status').value,
-                    note: row.querySelector('.att-note').value
-                });
-            });
-
-            const btn = document.querySelector('#tab-attendance .btn-green');
-            btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang lưu..."; 
-            btn.disabled = true;
-
-            try {
-                const res = await fetch(API + '/attendance', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ date, records })
-                });
-                const result = await res.json();
-
-                if(result.success) {
-                    alert("✅ Đã lưu danh sách điểm danh thành công!");
-                } else {
-                    alert("❌ Lỗi khi lưu dữ liệu!");
+                if(!date || !clubId) {
+                    document.getElementById('attTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#666;">Vui lòng chọn Ngày và Câu Lạc Bộ để bắt đầu điểm danh</td></tr>';
+                    return;
                 }
-            } catch(e) {
-                alert("❌ Lỗi kết nối đến máy chủ!");
+
+                const res = await fetch(`${API}/attendance?date=${date}&club_id=${clubId}`);
+                const data = await res.json();
+
+                if(data.length === 0) {
+                    document.getElementById('attTable').innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">CLB này hiện chưa có học viên nào đang theo học!</td></tr>';
+                    return;
+                }
+
+                document.getElementById('attTable').innerHTML = data.map(u => {
+                    const status = u.status || 'Có mặt'; 
+                    const color = status === 'Vắng' ? 'red' : (status === 'Có phép' ? '#ff8c00' : 'green');
+                    const beltClass = getBeltColorClass(u.level);
+
+                    return `
+                    <tr class="att-row" data-id="${u.user_id}">
+                        <td style="font-weight:bold; font-size:15px;">${u.fullname}</td>
+                        <td><span class="belt-badge ${beltClass}">${u.level || 'Không có / Khác'}</span></td>
+                        <td>
+                            <select class="att-status" style="width:100%; margin:0; font-weight:bold; color:${color}; border-color:${color};" onchange="this.style.color = this.options[this.selectedIndex].style.color; this.style.borderColor = this.options[this.selectedIndex].style.color;">
+                                <option value="Có mặt" style="color:green" ${status==='Có mặt'?'selected':''}>Có mặt</option>
+                                <option value="Có phép" style="color:#ff8c00" ${status==='Có phép'?'selected':''}>Có phép</option>
+                                <option value="Vắng" style="color:red" ${status==='Vắng'?'selected':''}>Vắng không phép</option>
+                            </select>
+                        </td>
+                        <td><input type="text" class="att-note" value="${u.note || ''}" placeholder="Nhập lý do vắng..." style="margin:0; width:100%;"></td>
+                    </tr>`;
+                }).join('');
             }
 
-            btn.innerHTML = '<i class="fa-solid fa-save"></i> Lưu Điểm Danh';
-            btn.disabled = false;
-        }
-        // --- XEM CHI TIẾT HỌC VIÊN VÀ LỊCH SỬ ĐIỂM DANH ---
+            async function saveAttendance() {
+                const date = document.getElementById('attDate').value;
+                const rows = document.querySelectorAll('.att-row');
+
+                if(!date) return alert("Vui lòng chọn ngày!");
+                if(rows.length === 0) return alert("Chưa có danh sách để lưu!");
+
+                const records = [];
+                rows.forEach(row => {
+                    records.push({
+                        user_id: row.getAttribute('data-id'),
+                        status: row.querySelector('.att-status').value,
+                        note: row.querySelector('.att-note').value
+                    });
+                });
+
+                const btn = document.querySelector('#tab-attendance .btn-green');
+                btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Đang lưu..."; 
+                btn.disabled = true;
+
+                try {
+                    const res = await fetch(API + '/attendance', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ date, records })
+                    });
+                    const result = await res.json();
+
+                    if(result.success) {
+                        alert("✅ Đã lưu danh sách điểm danh thành công!");
+                    } else {
+                        alert("❌ Lỗi khi lưu dữ liệu!");
+                    }
+                } catch(e) {
+                    alert("❌ Lỗi kết nối đến máy chủ!");
+                }
+
+                btn.innerHTML = '<i class="fa-solid fa-save"></i> Lưu Điểm Danh';
+                btn.disabled = false;
+            }
+
+            // --- XEM CHI TIẾT HỌC VIÊN VÀ LỊCH SỬ ĐIỂM DANH ---
             function viewUserDetail(u) {
                 document.querySelectorAll('.section').forEach(e => e.classList.remove('active-section'));
                 document.getElementById('user-detail-view').classList.add('active-section');
@@ -991,6 +1017,7 @@
                     </tr>`;
                 }).join('');
             }
+            
             // START
             loadClubs();
         </script>
