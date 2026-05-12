@@ -377,6 +377,7 @@
         }, 5000);
 
         // --- HÀM XUẤT PDF ĐÃ BẮT CÁC LỖI GIAO DIỆN MỚI BẰNG data-html2canvas-ignore ---
+        // --- HÀM XUẤT PDF ĐÃ ĐƯỢC NÂNG CẤP ĐỂ ÉP VÀO 1 TRANG DUY NHẤT ---
         function exportToPDF() {
             const btn = document.querySelector('button[onclick="exportToPDF()"]');
             const originalText = btn.innerHTML;
@@ -385,12 +386,28 @@
 
             const element = document.getElementById('exportArea');
             
+            // 1. Tự động lấy thước đo kích thước thực tế của Sơ đồ lúc đang hiển thị
+            const contentWidth = element.scrollWidth;
+            const contentHeight = element.scrollHeight;
+
             const opt = {
-                margin:       0.5,
+                margin:       20, // Lề 20 pixel
                 filename:     'So-Do-Thi-Dau-Karate.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: true }, 
-                jsPDF:        { unit: 'in', format: 'a3', orientation: 'landscape' }
+                image:        { type: 'jpeg', quality: 1 },
+                html2canvas:  { 
+                    scale: 2, // Tăng độ nét lên gấp 2 lần (để khi zoom không vỡ)
+                    useCORS: true, 
+                    logging: false,
+                    width: contentWidth, // Ép camera chụp hết chiều rộng
+                    windowWidth: contentWidth
+                },
+                jsPDF: { 
+                    unit: 'px', // Chuyển sang đo bằng hệ Pixel
+                    // 2. Tạo một trang PDF có kích thước vừa khít với Sơ đồ (+ 40px lề 2 bên)
+                    format: [contentWidth + 40, contentHeight + 40], 
+                    // 3. Tự động xoay ngang/dọc tùy theo tỷ lệ của cây sơ đồ
+                    orientation: contentWidth > contentHeight ? 'landscape' : 'portrait' 
+                }
             };
 
             html2pdf().set(opt).from(element).save().then(() => {
