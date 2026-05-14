@@ -205,86 +205,90 @@ app.post('/api/tournament/start', upload.single('file'), (req, res) => {
         const sheetName = workbook.SheetNames[0];
         const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
 
-        // Lấy danh sách VĐV từ Excel
         let players = data.slice(1).map(row => {
             return { name: row[0], team: row[1] || 'Tự do' }; 
         }).filter(p => p.name); 
 
         if (players.length < 2) {
-            console.log("❌ Lỗi: File Excel có ít hơn 2 VĐV hợp lệ.");
             return res.json({ success: false, message: "Cần ít nhất 2 VĐV để tạo giải!" });
         }
 
-        console.log(`✅ Đã đọc được ${players.length} VĐV. Bắt đầu bốc thăm TÁCH ĐOÀN...`);
+        console.log(`✅ Đọc ${players.length} VĐV. Bắt đầu chia hạt giống WKF...`);
         
-        // ==============================================================
-        // THUẬT TOÁN TÁCH ĐOÀN CỰC MẠNH (SEEDING ALGORITHM)
-        // ==============================================================
-        
-        // 1. Gom nhóm VĐV theo từng Đoàn (Team)
+        // 1. GOM NHÓM ĐỂ TÁCH ĐOÀN (ZIG-ZAG)
         const teamGroups = {};
         players.forEach(p => {
             if (!teamGroups[p.team]) teamGroups[p.team] = [];
             teamGroups[p.team].push(p);
         });
 
-        // 2. Chuyển thành mảng các đội và sắp xếp đội đông người lên trước
         const sortedTeams = Object.values(teamGroups).sort((a, b) => b.length - a.length);
-
-        // Kiểm tra xem có 1 đoàn nào đó chiếm quá nửa số VĐV không
-        // Nếu Đoàn A có 6 người, mà tổng giải có 10 người -> Chắc chắn phải có người Đoàn A tự đánh nhau
-        if (sortedTeams[0].length > Math.ceil(players.length / 2)) {
-            console.log("⚠️ Cảnh báo: Một đoàn có quá đông VĐV, không thể tách hoàn toàn 100%.");
-        }
-
-        // 3. Xếp hàng "Zig-Zag" để cách ly tối đa người cùng đoàn
         let arrangedPlayers = [];
-        let totalSlotsForDraw = players.length;
+        let totalPlayers = players.length;
         
-        for (let i = 0; i < totalSlotsForDraw; i++) {
-            // Tìm đội có nhiều người chưa được xếp nhất
+        for (let i = 0; i < totalPlayers; i++) {
             sortedTeams.sort((a, b) => b.length - a.length);
-            
-            // Lấy người đầu tiên của đội đông nhất nhét vào hàng
             if (sortedTeams.length > 0 && sortedTeams[0].length > 0) {
-                // Rút 1 người ngẫu nhiên trong đội đó
                 const randomIndex = Math.floor(Math.random() * sortedTeams[0].length);
-                const pickedPlayer = sortedTeams[0].splice(randomIndex, 1)[0];
-                arrangedPlayers.push(pickedPlayer);
+                arrangedPlayers.push(sortedTeams[0].splice(randomIndex, 1)[0]);
                 
-                // Nếu đội này hết người, xóa đội khỏi danh sách chờ
                 if (sortedTeams[0].length === 0) {
                     sortedTeams.shift();
                 } else {
-                    // Mẹo: Đẩy đội vừa lấy người xuống cuối để vòng lặp sau bốc đội khác (cách ly)
                     const usedTeam = sortedTeams.shift();
                     sortedTeams.push(usedTeam);
                 }
             }
         }
-        
-        // Gán lại mảng VĐV đã được "xếp hàng cách ly" vào mảng players gốc
-        players = arrangedPlayers;
+        players = arrangedPlayers; // Đã xếp xong đội hình so le
 
-        // ==============================================================
-        // KẾT THÚC THUẬT TOÁN TÁCH ĐOÀN
-        // Tiếp tục vẽ sơ đồ cây như bình thường...
-        // ==============================================================
-
+        // 2. TÍNH TỔNG SỐ SLOT CỦA CÂY (Lũy thừa của 2)
         let totalSlots = 1; 
         while(totalSlots < players.length) totalSlots *= 2;
 
+        // ==============================================================
+        // 3. THUẬT TOÁN HẠT GIỐNG CHUẨN QUỐC TẾ (BINARY SEEDING ALGORITHM)
+        // ==============================================================
+        function getBracketSlots(numSlots) {
+            if (numSlots === 1) return [0];
+            let slots = [0, 1];
+            while (slots.length < numSlots) {
+                let nextSlots = [];
+                let length = slots.length;
+                for (let i = 0; i < length; i++) {
+                    nextSlots.push(slots[i]);
+                    nextSlots.push(2 * length - 1 - slots[i]);
+                }
+                slots = nextSlots;
+            }
+            return slots; // Trả về mảng chia vị trí cách ly hoàn hảo
+        }
+
+        // Lấy danh sách vị trí phân bổ
+        const seedOrder = getBracketSlots(totalSlots);
+        const finalPositions = new Array(totalSlots).fill(null);
+
+        // Nhét VĐV vào các vị trí đã phân bổ (Đảm bảo cách xa nhau cực đại)
+        for (let i = 0; i < players.length; i++) {
+            finalPositions[seedOrder[i]] = players[i];
+        }
+
+        // ==============================================================
+
         let roundsData = { 1: [] };
         
-        // --- TẠO VÒNG 1 (Gắn VĐV từ 2 đầu mảng xếp vào giữa -> Cách ly cực xa) ---
-        for (let i = 0; i < totalSlots / 2; i++) {
-            const p1 = players[i];
-            const p2 = players[totalSlots - 1 - i]; 
+        // --- TẠO VÒNG 1 ---
+        // Giờ chỉ cần bốc lần lượt 2 người cạnh nhau (vì mảng finalPositions đã bị trộn chuẩn rồi)
+        for (let i = 0; i < totalSlots; i += 2) {
+            const p1 = finalPositions[i];
+            const p2 = finalPositions[i+1]; 
             
+            // Xử lý Thăm trắng (Bye)
             let isBye = (!p2 && p1);
-            let winner = isBye ? p1.name : null;
-            let status = isBye ? 'finished' : 'pending';
-            let winnerTeam = isBye ? p1.team : null;
+            let isByeReverse = (p2 && !p1);
+            let winner = isBye ? p1.name : (isByeReverse ? p2.name : null);
+            let status = (isBye || isByeReverse || (!p1 && !p2)) ? 'finished' : 'pending';
+            let winnerTeam = isBye ? p1.team : (isByeReverse ? p2.team : null);
 
             roundsData[1].push({
                 p1: p1 ? p1.name : null, 
@@ -342,7 +346,7 @@ app.post('/api/tournament/start', upload.single('file'), (req, res) => {
             const sql = "INSERT INTO matches (p1, p2, team1, team2, round, winner, status, score1, score2) VALUES ?";
             db.query(sql, [matches], (err) => {
                 if (err) return res.json({ success: false, message: "Lỗi thêm sơ đồ mới: " + err.message });
-                console.log("✅ Tạo sơ đồ thành công (Đã tách đoàn)!");
+                console.log("✅ Tạo sơ đồ thành công (Thuật toán Seeding chuẩn)!");
                 res.json({ success: true });
             });
         });
