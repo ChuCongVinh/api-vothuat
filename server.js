@@ -205,8 +205,9 @@ app.post('/api/tournament/start', upload.single('file'), (req, res) => {
         const sheetName = workbook.SheetNames[0];
         const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
 
-        const players = data.slice(1).map(row => {
-            return { name: row[0], team: row[1] || '' }; 
+        // Lấy danh sách VĐV từ Excel
+        let players = data.slice(1).map(row => {
+            return { name: row[0], team: row[1] || 'Tự do' }; 
         }).filter(p => p.name); 
 
         if (players.length < 2) {
@@ -214,21 +215,72 @@ app.post('/api/tournament/start', upload.single('file'), (req, res) => {
             return res.json({ success: false, message: "Cần ít nhất 2 VĐV để tạo giải!" });
         }
 
-        console.log(`✅ Đã đọc được ${players.length} VĐV. Đang tạo sơ đồ...`);
-        players.sort(() => Math.random() - 0.5);
+        console.log(`✅ Đã đọc được ${players.length} VĐV. Bắt đầu bốc thăm TÁCH ĐOÀN...`);
         
+        // ==============================================================
+        // THUẬT TOÁN TÁCH ĐOÀN CỰC MẠNH (SEEDING ALGORITHM)
+        // ==============================================================
+        
+        // 1. Gom nhóm VĐV theo từng Đoàn (Team)
+        const teamGroups = {};
+        players.forEach(p => {
+            if (!teamGroups[p.team]) teamGroups[p.team] = [];
+            teamGroups[p.team].push(p);
+        });
+
+        // 2. Chuyển thành mảng các đội và sắp xếp đội đông người lên trước
+        const sortedTeams = Object.values(teamGroups).sort((a, b) => b.length - a.length);
+
+        // Kiểm tra xem có 1 đoàn nào đó chiếm quá nửa số VĐV không
+        // Nếu Đoàn A có 6 người, mà tổng giải có 10 người -> Chắc chắn phải có người Đoàn A tự đánh nhau
+        if (sortedTeams[0].length > Math.ceil(players.length / 2)) {
+            console.log("⚠️ Cảnh báo: Một đoàn có quá đông VĐV, không thể tách hoàn toàn 100%.");
+        }
+
+        // 3. Xếp hàng "Zig-Zag" để cách ly tối đa người cùng đoàn
+        let arrangedPlayers = [];
+        let totalSlotsForDraw = players.length;
+        
+        for (let i = 0; i < totalSlotsForDraw; i++) {
+            // Tìm đội có nhiều người chưa được xếp nhất
+            sortedTeams.sort((a, b) => b.length - a.length);
+            
+            // Lấy người đầu tiên của đội đông nhất nhét vào hàng
+            if (sortedTeams.length > 0 && sortedTeams[0].length > 0) {
+                // Rút 1 người ngẫu nhiên trong đội đó
+                const randomIndex = Math.floor(Math.random() * sortedTeams[0].length);
+                const pickedPlayer = sortedTeams[0].splice(randomIndex, 1)[0];
+                arrangedPlayers.push(pickedPlayer);
+                
+                // Nếu đội này hết người, xóa đội khỏi danh sách chờ
+                if (sortedTeams[0].length === 0) {
+                    sortedTeams.shift();
+                } else {
+                    // Mẹo: Đẩy đội vừa lấy người xuống cuối để vòng lặp sau bốc đội khác (cách ly)
+                    const usedTeam = sortedTeams.shift();
+                    sortedTeams.push(usedTeam);
+                }
+            }
+        }
+        
+        // Gán lại mảng VĐV đã được "xếp hàng cách ly" vào mảng players gốc
+        players = arrangedPlayers;
+
+        // ==============================================================
+        // KẾT THÚC THUẬT TOÁN TÁCH ĐOÀN
+        // Tiếp tục vẽ sơ đồ cây như bình thường...
+        // ==============================================================
+
         let totalSlots = 1; 
         while(totalSlots < players.length) totalSlots *= 2;
 
-        // Dùng object để lưu tạm các vòng đấu, dễ dàng đẩy người "Vào thẳng" sang vòng sau
         let roundsData = { 1: [] };
         
-        // --- TẠO VÒNG 1 ---
+        // --- TẠO VÒNG 1 (Gắn VĐV từ 2 đầu mảng xếp vào giữa -> Cách ly cực xa) ---
         for (let i = 0; i < totalSlots / 2; i++) {
             const p1 = players[i];
-            const p2 = players[totalSlots - 1 - i];
+            const p2 = players[totalSlots - 1 - i]; 
             
-            // Nếu không có p2, p1 được vào thẳng (Bye)
             let isBye = (!p2 && p1);
             let winner = isBye ? p1.name : null;
             let status = isBye ? 'finished' : 'pending';
@@ -244,7 +296,7 @@ app.post('/api/tournament/start', upload.single('file'), (req, res) => {
                 status: status, 
                 score1: 0, 
                 score2: 0,
-                winnerTeam: winnerTeam // Lưu tạm thông tin team để đẩy sang vòng 2
+                winnerTeam: winnerTeam 
             });
         }
 
@@ -257,11 +309,9 @@ app.post('/api/tournament/start', upload.single('file'), (req, res) => {
             roundsData[round] = [];
             
             for (let j = 0; j < currentRoundMatches; j++) {
-                // Nhìn lại kết quả từ 2 trận của vòng trước đó
                 let prevMatch1 = roundsData[round - 1][j * 2];
                 let prevMatch2 = roundsData[round - 1][j * 2 + 1];
 
-                // Nếu vòng trước có người thắng (do được Vào thẳng), bê nguyên tên thả vào đây
                 let p1 = prevMatch1.winner;
                 let team1 = prevMatch1.winnerTeam || '';
                 
@@ -278,7 +328,7 @@ app.post('/api/tournament/start', upload.single('file'), (req, res) => {
             round++;
         }
 
-        // --- CHUYỂN DỮ LIỆU THÀNH MẢNG ĐỂ LƯU VÀO DATABASE ---
+        // --- LƯU VÀO DATABASE ---
         const matches = [];
         for (let r = 1; r < round; r++) {
             roundsData[r].forEach(m => {
@@ -286,21 +336,13 @@ app.post('/api/tournament/start', upload.single('file'), (req, res) => {
             });
         }
 
-        // --- ĐOẠN CODE ĐÃ ĐƯỢC NÂNG CẤP ĐỂ BÁO CÁO RÕ LỖI ---
         db.query("TRUNCATE TABLE matches", (err) => {
-            if (err) {
-                console.error("Lỗi xóa DB:", err);
-                // In thẳng lỗi của MySQL ra popup để dễ sửa
-                return res.json({ success: false, message: "Lỗi dọn bảng cũ: " + err.message });
-            }
+            if (err) return res.json({ success: false, message: "Lỗi dọn bảng cũ: " + err.message });
             
             const sql = "INSERT INTO matches (p1, p2, team1, team2, round, winner, status, score1, score2) VALUES ?";
             db.query(sql, [matches], (err) => {
-                if (err) {
-                    console.error("Lỗi Insert:", err);
-                    return res.json({ success: false, message: "Lỗi thêm sơ đồ mới: " + err.message });
-                }
-                console.log("✅ Tạo sơ đồ thành công!");
+                if (err) return res.json({ success: false, message: "Lỗi thêm sơ đồ mới: " + err.message });
+                console.log("✅ Tạo sơ đồ thành công (Đã tách đoàn)!");
                 res.json({ success: true });
             });
         });
