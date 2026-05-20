@@ -19,11 +19,19 @@
         /* --- KHUNG CHÍNH --- */
         #bracketContainer { display: flex; flex-direction: column; align-items: flex-start; padding-left: 20px; padding-bottom: 50px; gap: 40px; }
 
-        /* --- BỌC BẢNG ĐẤU --- */
-        .pool-container { display: flex; position: relative; border: 2px dashed #ccc; padding: 30px 20px 20px 20px; border-radius: 10px; background: #fafafa; }
+        /* --- BỌC BẢNG ĐẤU & BẢNG DANH SÁCH --- */
+        .pool-container { display: flex; flex-direction: row; gap: 50px; position: relative; border: 2px dashed #ccc; padding: 40px 20px 20px 20px; border-radius: 10px; background: #fafafa; align-items: flex-start; }
+        .pool-container-single { display: flex; flex-direction: row; gap: 50px; position: relative; padding: 20px 0; align-items: flex-start; }
         .pool-title { position: absolute; top: -16px; left: 20px; background: #1565c0; color: white; padding: 5px 15px; font-weight: 900; font-size: 1.1rem; border-radius: 20px; letter-spacing: 1px; }
 
-        .finals-container { display: flex; position: relative; border: 2px solid #d4af37; padding: 30px 20px 20px 20px; border-radius: 10px; background: #fff9e6; margin-top: 20px; }
+        /* --- BẢNG DANH SÁCH THÍ SINH (BÊN TRÁI) --- */
+        .participants-table-wrapper { min-width: 380px; flex-shrink: 0; margin-top: 10px; }
+        .participants-table { width: 100%; border: 2px solid #000; border-collapse: collapse; background: #fff; }
+        .participants-table th, .participants-table td { border: 1px solid #000; padding: 8px 10px; text-align: center; font-size: 13px; font-weight: 700; color: #000; }
+        .participants-table th { background-color: #fff; text-transform: uppercase; }
+        .bracket-cols-wrapper { display: flex; flex-direction: row; }
+
+        .finals-container { display: flex; position: relative; border: 2px solid #d4af37; padding: 40px 20px 20px 20px; border-radius: 10px; background: #fff9e6; margin-top: 20px; }
         .finals-title { position: absolute; top: -16px; left: 20px; background: #d4af37; color: white; padding: 5px 15px; font-weight: 900; font-size: 1.1rem; border-radius: 20px; }
 
         /* --- CỘT VÒNG ĐẤU --- */
@@ -89,7 +97,7 @@
         <i class="fa-solid fa-file-pdf"></i> Tải Sơ Đồ PDF
     </button>
 
-    <div id="exportArea" style="background: white; padding: 20px; min-width: 1000px;">
+    <div id="exportArea" style="background: white; padding: 40px; display: inline-block; min-width: 100%;">
         <div class="header">
             <h1 style="margin-top: 20px;">SƠ ĐỒ THI ĐẤU TOÀN GIẢI</h1>
         </div>
@@ -130,7 +138,6 @@
     <a href="tournament_hub.html" class="nav-btn" data-html2canvas-ignore="true"><i class="fa-solid fa-arrow-left"></i> Khu Vực Giải Đấu</a>
 
     <script>
-        // Lưu trữ dữ liệu gốc từ API
         let currentTournamentData = null;
 
         function openViewerWindow() {
@@ -139,7 +146,6 @@
 
         async function loadBracket() {
             try {
-                // Chỉ gọi API 1 lần, nếu đã có dữ liệu thì dùng lại để render chia bảng cho nhanh
                 const res = await fetch('https://api-vothuat.onrender.com/api/tournament/bracket');
                 currentTournamentData = await res.json();
                 renderFullBracket(currentTournamentData);
@@ -153,9 +159,7 @@
             const container = document.getElementById('bracketContainer');
             container.innerHTML = '';
             
-            // Đặt Flex Row nếu 1 bảng, Flex Column nếu nhiều bảng để hiển thị dọc
             let userSelectedPools = parseInt(document.getElementById('numPools').value) || 1;
-
             const roundsData = data.rounds || [];
             const champion = data.champion;
 
@@ -164,7 +168,6 @@
                 return;
             }
 
-            // 1. CHUẨN HÓA VÒNG 1 LÊN LŨY THỪA CỦA 2 ĐỂ CHIA BẢNG KHÔNG BỊ LỖI
             let firstRoundMatches = roundsData[0];
             let power = 1;
             while(power < firstRoundMatches.length) power *= 2;
@@ -175,13 +178,11 @@
                 else paddedFirstRound.push({ id: `R1_dummy_${i}`, p1: '---', p2: '---', isPlaceholder: true });
             }
 
-            // Kiểm tra số bảng hợp lệ (Không được chia 4 bảng nếu vòng 1 chỉ có 2 trận)
             let numPools = userSelectedPools;
             while (power < numPools && numPools > 1) {
                 numPools /= 2;
             }
 
-            // 2. XÂY DỰNG TOÀN BỘ CẤU TRÚC CÂY
             let fullBracketStructure = [paddedFirstRound];
             let currentCount = power;
             let roundIndex = 1;
@@ -204,10 +205,7 @@
             // 3. HIỂN THỊ CÁC BẢNG (POOLS)
             for (let p = 0; p < numPools; p++) {
                 const poolDiv = document.createElement('div');
-                poolDiv.className = numPools > 1 ? 'pool-container' : '';
-                if(numPools === 1) {
-                    poolDiv.style.display = 'flex';
-                }
+                poolDiv.className = numPools > 1 ? 'pool-container' : 'pool-container-single';
 
                 if (numPools > 1) {
                     const poolTitle = document.createElement('div');
@@ -216,9 +214,62 @@
                     poolDiv.appendChild(poolTitle);
                 }
 
-                // Vẽ các vòng đấu thuộc về Bảng này
+                // ==========================================
+                // BẢNG DANH SÁCH THÍ SINH (CỘT BÊN TRÁI)
+                // ==========================================
+                let r1ChunkSize = fullBracketStructure[0].length / numPools;
+                let r1StartIdx = p * r1ChunkSize;
+                let poolR1Matches = fullBracketStructure[0].slice(r1StartIdx, r1StartIdx + r1ChunkSize);
+                
+                let poolPlayers = [];
+                poolR1Matches.forEach(m => {
+                    if (m.p1 && !m.isPlaceholder) poolPlayers.push({ name: m.p1, team: m.team1 });
+                    if (m.p2 && !m.isPlaceholder) poolPlayers.push({ name: m.p2, team: m.team2 });
+                });
+
+                const tableWrapper = document.createElement('div');
+                tableWrapper.className = 'participants-table-wrapper';
+                
+                if (poolPlayers.length > 0) {
+                    let tableHTML = `<table class="participants-table">
+                        <thead><tr>
+                            <th width="10%">STT</th>
+                            <th width="45%">HỌ VÀ TÊN</th>
+                            <th width="20%">NĂM SINH</th>
+                            <th width="25%">ĐƠN VỊ</th>
+                        </tr></thead>
+                        <tbody>`;
+                    
+                    poolPlayers.forEach((player, index) => {
+                        let displayName = player.name;
+                        let birthYear = '';
+                        
+                        // Regex bóc tách năm sinh (4 số cuối cùng trong tên)
+                        const matchYear = player.name.match(/(.*?)\s+(\d{4})$/);
+                        if (matchYear) {
+                            displayName = matchYear[1];
+                            birthYear = matchYear[2];
+                        }
+
+                        tableHTML += `<tr>
+                            <td>${index + 1}</td>
+                            <td style="text-align:left;">${displayName}</td>
+                            <td>${birthYear}</td>
+                            <td>${player.team || ''}</td>
+                        </tr>`;
+                    });
+                    tableHTML += `</tbody></table>`;
+                    tableWrapper.innerHTML = tableHTML;
+                }
+                poolDiv.appendChild(tableWrapper);
+
+                // ==========================================
+                // VẼ CÂY SƠ ĐỒ (CỘT BÊN PHẢI)
+                // ==========================================
+                const bracketColsWrapper = document.createElement('div');
+                bracketColsWrapper.className = 'bracket-cols-wrapper';
+
                 fullBracketStructure.forEach((roundMatches, rIdx) => {
-                    // Nếu vòng đấu này có số trận đấu >= số lượng Bảng -> Vòng này chia đều vào các bảng
                     if (roundMatches.length >= numPools) {
                         const col = document.createElement('div');
                         col.className = 'round-column';
@@ -244,13 +295,14 @@
 
                             col.appendChild(pairDiv);
                         }
-                        poolDiv.appendChild(col);
+                        bracketColsWrapper.appendChild(col);
                     }
                 });
+                poolDiv.appendChild(bracketColsWrapper);
                 container.appendChild(poolDiv);
             }
 
-            // 4. HIỂN THỊ VÒNG CHUNG KẾT (NƠI CÁC BẢNG ĐÁNH CHÉO)
+            // 4. HIỂN THỊ VÒNG CHUNG KẾT CỦA CÁC BẢNG ĐÁNH CHÉO NHAU
             if (numPools > 1) {
                 const finalsDiv = document.createElement('div');
                 finalsDiv.className = 'finals-container';
@@ -260,9 +312,11 @@
                 finalsTitle.innerHTML = `<i class="fa-solid fa-crown"></i> VÒNG CHUNG KẾT CÁC BẢNG`;
                 finalsDiv.appendChild(finalsTitle);
 
+                const bracketColsWrapperFinal = document.createElement('div');
+                bracketColsWrapperFinal.className = 'bracket-cols-wrapper';
+
                 let hasFinals = false;
                 fullBracketStructure.forEach((roundMatches, rIdx) => {
-                    // Vòng nào có số trận < số lượng Bảng thì gộp chung vào Vòng Chung Kết
                     if (roundMatches.length < numPools) {
                         hasFinals = true;
                         const col = document.createElement('div');
@@ -284,27 +338,28 @@
 
                             col.appendChild(pairDiv);
                         }
-                        finalsDiv.appendChild(col);
+                        bracketColsWrapperFinal.appendChild(col);
                     }
                 });
 
                 if (hasFinals) {
-                    // Cột cúp vàng nằm ở Vòng Chung Kết
                     const championCol = document.createElement('div');
                     championCol.className = 'champion-column';
                     let winnerDisplay = champion ? `<i class="fa-solid fa-trophy"></i> ${champion}` : "?";
                     championCol.innerHTML = `<div class="champion-line"></div><div class="champion-name">${winnerDisplay}</div>`;
-                    finalsDiv.appendChild(championCol);
+                    bracketColsWrapperFinal.appendChild(championCol);
 
+                    finalsDiv.appendChild(bracketColsWrapperFinal);
                     container.appendChild(finalsDiv);
                 }
             } else {
-                // Nếu chỉ có 1 Bảng, Cúp vàng nối liền ở cuối
                 const championCol = document.createElement('div');
                 championCol.className = 'champion-column';
                 let winnerDisplay = champion ? `<i class="fa-solid fa-trophy"></i> ${champion}` : "?";
                 championCol.innerHTML = `<div class="champion-line"></div><div class="champion-name">${winnerDisplay}</div>`;
-                container.lastChild.appendChild(championCol);
+                
+                const colsWrapper = container.lastChild.querySelector('.bracket-cols-wrapper');
+                if(colsWrapper) colsWrapper.appendChild(championCol);
             }
         }
 
@@ -317,6 +372,12 @@
                 div.innerHTML = `<div class="player-row aka"><span class="empty-slot">---</span></div><div class="player-row ao"><span class="empty-slot">---</span></div>`;
                 return div;
             }
+
+            // Xóa phần Năm sinh (nếu có) trên thẻ đấu để cây nhìn gọn gàng
+            let nameP1 = match.p1 || '---';
+            let nameP2 = match.p2 || '---';
+            if(nameP1 !== '---') nameP1 = nameP1.replace(/\s+\d{4}$/, '');
+            if(nameP2 !== '---') nameP2 = nameP2.replace(/\s+\d{4}$/, '');
 
             const team1 = match.team1 ? `<span class="team-name">(${match.team1})</span>` : '';
             const team2 = match.team2 ? `<span class="team-name">(${match.team2})</span>` : '';
@@ -344,13 +405,13 @@
                 <div class="match-info">Trận ${match.id} ${btn}</div>
                 <div class="player-row aka ${match.winner === match.p1 ? 'win' : ''}">
                     <div class="player-left">
-                        <span>${match.p1 || '---'}</span> ${team1}
+                        <span>${nameP1}</span> ${team1}
                     </div>
                     ${s1}
                 </div>
                 <div class="player-row ao ${match.winner === match.p2 ? 'win' : ''}">
                     <div class="player-left">
-                        <span>${match.p2 || '---'}</span> ${team2}
+                        <span>${nameP2}</span> ${team2}
                     </div>
                     ${s2}
                 </div>
@@ -363,11 +424,8 @@
             window.open(`scoreboard.html?matchId=${id}`, '_blank');
         }
 
-        // Tự động load mỗi 5s
         loadBracket();
         setInterval(() => {
-            // Không gọi lại API toàn bộ nếu người dùng đang thao tác chọn bảng để tránh giật hình
-            // Code này đã lưu currentTournamentData nên có thể dùng logic tối ưu hơn sau này
             fetch('https://api-vothuat.onrender.com/api/tournament/bracket')
                 .then(res => res.json())
                 .then(data => {
@@ -376,8 +434,6 @@
                 }).catch(console.error);
         }, 5000);
 
-        // --- HÀM XUẤT PDF ĐÃ BẮT CÁC LỖI GIAO DIỆN MỚI BẰNG data-html2canvas-ignore ---
-        // --- HÀM XUẤT PDF ĐÃ ĐƯỢC NÂNG CẤP ĐỂ ÉP VÀO 1 TRANG DUY NHẤT ---
         function exportToPDF() {
             const btn = document.querySelector('button[onclick="exportToPDF()"]');
             const originalText = btn.innerHTML;
@@ -386,26 +442,23 @@
 
             const element = document.getElementById('exportArea');
             
-            // 1. Tự động lấy thước đo kích thước thực tế của Sơ đồ lúc đang hiển thị
             const contentWidth = element.scrollWidth;
             const contentHeight = element.scrollHeight;
 
             const opt = {
-                margin:       20, // Lề 20 pixel
+                margin:       20, 
                 filename:     'So-Do-Thi-Dau-Karate.pdf',
                 image:        { type: 'jpeg', quality: 1 },
                 html2canvas:  { 
-                    scale: 2, // Tăng độ nét lên gấp 2 lần (để khi zoom không vỡ)
+                    scale: 2, 
                     useCORS: true, 
                     logging: false,
-                    width: contentWidth, // Ép camera chụp hết chiều rộng
+                    width: contentWidth, 
                     windowWidth: contentWidth
                 },
                 jsPDF: { 
-                    unit: 'px', // Chuyển sang đo bằng hệ Pixel
-                    // 2. Tạo một trang PDF có kích thước vừa khít với Sơ đồ (+ 40px lề 2 bên)
+                    unit: 'px', 
                     format: [contentWidth + 40, contentHeight + 40], 
-                    // 3. Tự động xoay ngang/dọc tùy theo tỷ lệ của cây sơ đồ
                     orientation: contentWidth > contentHeight ? 'landscape' : 'portrait' 
                 }
             };
