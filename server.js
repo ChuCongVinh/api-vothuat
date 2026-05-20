@@ -174,6 +174,7 @@ app.delete('/api/scores/:id', (req, res) => { db.query("DELETE FROM scores WHERE
 // ============================================================
 // 5. API GIẢI ĐẤU (TOURNAMENT)
 // ============================================================
+let currentTournamentName = "SƠ ĐỒ THI ĐẤU TOÀN GIẢI";
 app.get('/api/tournament/bracket', (req, res) => {
     db.query("SELECT * FROM matches ORDER BY id ASC", (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -186,7 +187,9 @@ app.get('/api/tournament/bracket', (req, res) => {
         const maxRound = results.length > 0 ? Math.max(...results.map(m => m.round)) : 0;
         const finalMatch = results.find(m => m.round === maxRound);
         if(finalMatch && finalMatch.winner) champion = finalMatch.winner;
-        res.json({ rounds: Object.values(rounds), champion });
+        
+        // 2. Trả về thêm tên Nội dung thi đấu (tournamentName) cho trang web
+        res.json({ rounds: Object.values(rounds), champion, tournamentName: currentTournamentName });
     });
 });
 
@@ -199,7 +202,8 @@ app.get('/api/tournament/match/:id', (req, res) => {
 
 app.post('/api/tournament/start', upload.single('file'), (req, res) => {
     if (!req.file) return res.json({ success: false, message: "Chưa chọn file!" });
-
+    const rawFileName = req.file.originalname;
+    currentTournamentName = rawFileName.replace(/\.[^/.]+$/, "").toUpperCase();
     try {
         const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
