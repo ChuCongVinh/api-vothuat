@@ -202,7 +202,8 @@ app.get('/api/tournament/match/:id', (req, res) => {
 
 app.post('/api/tournament/start', upload.single('file'), (req, res) => {
     if (!req.file) return res.json({ success: false, message: "Chưa chọn file!" });
-    const rawFileName = req.file.originalname;
+    // 3. Tự động lấy tên file gốc, ÉP DỊCH ĐÚNG FONT TIẾNG VIỆT (UTF-8), cắt đuôi và in hoa
+    const rawFileName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
     currentTournamentName = rawFileName.replace(/\.[^/.]+$/, "").toUpperCase();
     try {
         const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
