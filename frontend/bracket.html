@@ -99,7 +99,7 @@
 
     <div id="exportArea" style="background: white; padding: 40px; display: inline-block; min-width: 100%;">
         <div class="header">
-            <h1 style="margin-top: 20px;">SƠ ĐỒ THI ĐẤU TOÀN GIẢI</h1>
+            <h1 id="tournamentTitle" style="margin-top: 20px;">SƠ ĐỒ THI ĐẤU TOÀN GIẢI</h1>
         </div>
         
         <div class="controls-wrapper" data-html2canvas-ignore="true">
@@ -156,6 +156,7 @@
         }
 
         function renderFullBracket(data) {
+            document.getElementById('tournamentTitle').innerText = data.tournamentName || "SƠ ĐỒ THI ĐẤU TOÀN GIẢI";
             const container = document.getElementById('bracketContainer');
             container.innerHTML = '';
             

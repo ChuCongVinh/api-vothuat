@@ -564,6 +564,47 @@ app.post('/api/forgot-password', (req, res) => {
         });
     });
 });
+
+// ============================================================
+// 8. API HỌC PHÍ (TUITION)
+// ============================================================
+app.get('/api/tuition', (req, res) => {
+    const { month, year, club_id } = req.query;
+    const sql = `
+        SELECT u.id as user_id, u.fullname, u.level, t.status, t.amount, t.pay_date 
+        FROM users u 
+        LEFT JOIN tuition t ON u.id = t.user_id AND t.month = ? AND t.year = ?
+        WHERE u.role = 'student' AND u.status != 'Đã nghỉ' AND u.club_id = ?
+        ORDER BY u.fullname ASC
+    `;
+    db.query(sql, [month, year, club_id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+app.post('/api/tuition', (req, res) => {
+    const { month, year, club_id, records } = req.body;
+    if (!records || records.length === 0) return res.json({success: true});
+
+    const values = records.map(r => [
+        r.user_id, month, year, r.status, r.amount || 0, r.pay_date || null
+    ]);
+    
+    const sql = `
+        INSERT INTO tuition (user_id, month, year, status, amount, pay_date) 
+        VALUES ? 
+        ON DUPLICATE KEY UPDATE status = VALUES(status), amount = VALUES(amount), pay_date = VALUES(pay_date)
+    `;
+
+    db.query(sql, [values], (err) => {
+        if (err) {
+            console.error("Lỗi học phí:", err);
+            return res.status(500).json({ success: false, error: err.message });
+        }
+        res.json({ success: true });
+    });
+});
 // ============================================================
 // KHỞI CHẠY
 // ============================================================
