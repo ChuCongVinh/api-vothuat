@@ -570,14 +570,22 @@ app.post('/api/forgot-password', (req, res) => {
 // ============================================================
 app.get('/api/tuition', (req, res) => {
     const { month, year, club_id } = req.query;
+    // Nâng cấp SQL: Kết hợp bảng users, tuition và attendance để đếm số buổi
     const sql = `
-        SELECT u.id as user_id, u.fullname, u.level, t.status, t.amount, t.pay_date 
+        SELECT 
+            u.id as user_id, u.fullname, u.level, 
+            t.status, t.amount, t.pay_date,
+            COUNT(CASE WHEN a.status = 'Có mặt' THEN 1 END) as co_mat,
+            COUNT(CASE WHEN a.status = 'Có phép' THEN 1 END) as co_phep,
+            COUNT(CASE WHEN a.status = 'Vắng' THEN 1 END) as khong_phep
         FROM users u 
         LEFT JOIN tuition t ON u.id = t.user_id AND t.month = ? AND t.year = ?
+        LEFT JOIN attendance a ON u.id = a.user_id AND MONTH(a.date) = ? AND YEAR(a.date) = ?
         WHERE u.role = 'student' AND u.status != 'Đã nghỉ' AND u.club_id = ?
+        GROUP BY u.id, u.fullname, u.level, t.status, t.amount, t.pay_date
         ORDER BY u.fullname ASC
     `;
-    db.query(sql, [month, year, club_id], (err, results) => {
+    db.query(sql, [month, year, month, year, club_id], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(results);
     });
